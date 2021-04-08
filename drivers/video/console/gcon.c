@@ -11,7 +11,7 @@
 #include <linux/dma-mapping.h>
 
 #define BLANK                   0x0020
-#define AH_BASE                 0x43c00000
+#define AH_BASE                 0x43c00000 //TODO: change to correct address for ariane
 /*
   Offsets relative to AH_BASE
 */
@@ -29,22 +29,22 @@
 
 
 /*
-  hardcode video format like a bad boy
+  hardcode video format like a bad boy (SVGA60)
 */
-#define GCON_VIDEO_LINES 720
-#define GCON_VIDEO_COLS 1280
-#define GCON_HTOT 1650
-#define GCON_VTOT 750
-#define GCON_HFRONT 110
-#define GCON_VFRONT 5
-#define GCON_HSYNC 40
-#define GCON_VSYNC 5
+#define GCON_VIDEO_LINES 600
+#define GCON_VIDEO_COLS 800
+#define GCON_HTOT 1056
+#define GCON_VTOT 628
+#define GCON_HFRONT 40
+#define GCON_VFRONT 1
+#define GCON_HSYNC 128
+#define GCON_VSYNC 4
 /* log2 of #frames of blink interval */
 #define GCON_BLINK_T 5
 /* font hardcoded for now */
 #define GCON_FONTW 8
-#define GCON_TEXT_ROWS 45
-#define GCON_TEXT_COLS 160
+#define GCON_TEXT_ROWS 37
+#define GCON_TEXT_COLS 100
 
 /* ----------------------------------
    World Interface

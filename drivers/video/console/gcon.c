@@ -11,7 +11,7 @@
 #include <linux/dma-mapping.h>
 
 #define BLANK                   0x0020
-#define AH_BASE                 0x43c00000 //TODO: change to correct address for ariane
+#define AH_BASE                 0x19000000
 /*
   Offsets relative to AH_BASE
 */

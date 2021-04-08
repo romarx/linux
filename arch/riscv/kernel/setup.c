@@ -66,6 +66,7 @@ void __init parse_dtb(unsigned int hartid, void *dtb)
 
 void __init setup_arch(char **cmdline_p)
 {
+	pr_info("entering setup_arch\n");
 	init_mm.start_code = (unsigned long) _stext;
 	init_mm.end_code   = (unsigned long) _etext;
 	init_mm.end_data   = (unsigned long) _edata;
@@ -87,7 +88,10 @@ void __init setup_arch(char **cmdline_p)
 	setup_smp();
 #endif
 
-#ifdef CONFIG_DUMMY_CONSOLE
+#if defined(CONFIG_G_CONSOLE)
+	pr_info("Attempting to set conswitch = &gcon\n");
+	conswitchp = &gcon;
+#elif defined(CONFIG_DUMMY_CONSOLE)
 	conswitchp = &dummy_con;
 #endif
 

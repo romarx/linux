@@ -46,6 +46,11 @@ config VGACON_SOFT_SCROLLBACK_SIZE
 	  buffers of VGA consoles. Each 64KB will give you approximately
 	  16 80x25 screenfuls of scrollback buffer.
 
+config G_CONSOLE
+       bool "Enable the hacky alpha console driver for AXI_HDMI device"
+       depends on !VGACON
+       default n
+
 config VGACON_SOFT_SCROLLBACK_PERSISTENT_ENABLE_BY_DEFAULT
 	bool "Persistent Scrollback History for each console by default"
 	depends on VGACON_SOFT_SCROLLBACK

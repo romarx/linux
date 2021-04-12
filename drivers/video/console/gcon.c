@@ -82,7 +82,7 @@ static int gcon_blank(struct vc_data *c, int blank, int mode_switch);
 */
 static int gcon_set_origin(struct vc_data *c);
 
-static int gcon_scroll(struct vc_data *c, int top,
+static bool gcon_scroll(struct vc_data *c, int top,
                         int bottom, int dir,
                         int lines);
 

@@ -224,7 +224,7 @@ static int gcon_set_origin(struct vc_data *c) {
     tp_phys_actual = text_buf_phys;
   } else {
     c->vc_origin = (unsigned long) c->vc_screenbuf;
-    tp_phys_actual = (dma_addr_t) virt_to_phys((const volatile void *)c->vc_origin);
+    tp_phys_actual = (dma_addr_t) virt_to_phys((volatile void *)c->vc_origin);
     printk(KERN_ALERT "Sheeit text_buf_phys didn't get filled I'm glad I have this graceful error handling\n");
   }
 
@@ -235,11 +235,11 @@ static int gcon_set_origin(struct vc_data *c) {
   return 1;
 }
 
-static int gcon_scroll(struct vc_data *c, int top,
+static bool gcon_scroll(struct vc_data *c, int top,
                         int bottom, int dir,
                         int lines) {
   // is this right?????
-  return 0;
+  return false;
 }
 
 
@@ -301,14 +301,14 @@ static int gcon_blank(struct vc_data *c, int blank, int mode_switch) {
     if (text_buf_phys)
       write_text_p_ah(text_buf_phys);
     else
-      write_text_p_ah((dma_addr_t) virt_to_phys((const volatile void *)c->vc_origin));
+      write_text_p_ah((dma_addr_t) virt_to_phys((volatile void *)c->vc_origin));
     return 1; /* whatever this means... */
   case 1:
   default: /*blank*/
     if (blank_buf_phys)
       write_text_p_ah(blank_buf_phys);
     else if (blank_buf)
-      write_text_p_ah((dma_addr_t) virt_to_phys((const volatile void *)blank_buf));
+      write_text_p_ah((dma_addr_t) virt_to_phys((volatile void *)blank_buf));
     else {
       printk(KERN_ALERT "Blanking attempted with NULL blank_buf; Skipping\n");
       return 0;
@@ -401,15 +401,15 @@ static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
   return curs_reg;
 }
 static void gcon_putcs(struct vc_data *c, const unsigned short *a, int b, int k, int d) {
-   mb();
+    mb();
 }
 
 static void gcon_putc(struct vc_data *c, int a, int b, int k) {
-   mb();
+    mb();
 }
 
-static int gcon_set_palette(struct vc_data *c, unsigned char *table) {
-  return 0;
+static void gcon_set_palette(struct vc_data *c, unsigned char *table) {
+    mb();
 }
 
 static int gcon_dummy(struct vc_data *c)

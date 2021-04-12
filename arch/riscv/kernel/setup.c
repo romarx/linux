@@ -88,11 +88,13 @@ void __init setup_arch(char **cmdline_p)
 	setup_smp();
 #endif
 
+#ifdef CONFIG_VT
 #if defined(CONFIG_G_CONSOLE)
 	pr_info("Attempting to set conswitch = &gcon\n");
 	conswitchp = &gcon;
 #elif defined(CONFIG_DUMMY_CONSOLE)
 	conswitchp = &dummy_con;
+#endif
 #endif
 
 	riscv_fill_hwcap();

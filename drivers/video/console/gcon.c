@@ -82,10 +82,6 @@ static int gcon_blank(struct vc_data *c, int blank, int mode_switch);
 */
 static int gcon_set_origin(struct vc_data *c);
 
-static bool gcon_scroll(struct vc_data *c, int top,
-                        int bottom, int dir,
-                        int lines);
-
 
 /*
   this is a dummy which just inserts a memory barrier
@@ -235,9 +231,9 @@ static int gcon_set_origin(struct vc_data *c) {
   return 1;
 }
 
-static bool gcon_scroll(struct vc_data *c, int top,
-                        int bottom, int dir,
-                        int lines) {
+static bool gcon_scroll(struct vc_data *c,unsigned int top,
+                        unsigned int bottom, enum con_scroll dir,
+                        unsigned int lines) {
   // is this right?????
   return false;
 }
@@ -408,7 +404,7 @@ static void gcon_putc(struct vc_data *c, int a, int b, int k) {
     mb();
 }
 
-static void gcon_set_palette(struct vc_data *c, unsigned char *table) {
+static void gcon_set_palette(struct vc_data *vc, const unsigned char *table) {
     mb();
 }
 

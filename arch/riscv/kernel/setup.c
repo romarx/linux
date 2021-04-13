@@ -88,6 +88,9 @@ void __init setup_arch(char **cmdline_p)
 	setup_smp();
 #endif
 
+pr_info("setup.c wants to conswitch\n");
+
+/*
 #ifdef CONFIG_VT
 #if defined(CONFIG_G_CONSOLE)
 	pr_info("Attempting to set conswitch = &gcon\n");
@@ -95,6 +98,14 @@ void __init setup_arch(char **cmdline_p)
 #elif defined(CONFIG_DUMMY_CONSOLE)
 	conswitchp = &dummy_con;
 #endif
+#endif
+*/
+
+
+
+#ifdef CONFIG_DUMMY_CONSOLE
+	pr_info("Setup dummy console\n");
+	conswitchp = &dummy_con;
 #endif
 
 	riscv_fill_hwcap();

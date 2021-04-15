@@ -1,14 +1,17 @@
+#include <linux/kdev_t.h>
+#include <linux/screen_info.h>
+#include <linux/init.h>
 #include <linux/module.h>
 #include <linux/types.h>
 #include <linux/vt_kern.h>
 #include <linux/console.h>
-#include <linux/console_struct.h>
-#include <linux/io.h>
-#include <linux/ioport.h>
-#include <linux/slab.h>
-#include <asm/io.h>
-#include <asm-generic/io.h>
-#include <linux/dma-mapping.h>
+//#include <linux/console_struct.h>
+//#include <linux/io.h>
+//#include <linux/ioport.h>
+//#include <linux/slab.h>
+//#include <asm/io.h>
+//#include <asm-generic/io.h>
+//#include <linux/dma-mapping.h>
 
 #define BLANK                   0x0020
 #define AH_BASE                 0x19000000
@@ -204,12 +207,13 @@ static void gcon_init(struct vc_data *c, int init) {
 		vc_resize(c, GCON_TEXT_COLS, GCON_TEXT_ROWS);
   /* let's hope this works - in some configurations of
      screen resolution and #cols/rows, we have to blank */
- /*
+  /*
   c->vc_scan_lines = GCON_VIDEO_LINES;
   c->vc_font.height = 2*GCON_FONTW;
   c->vc_complement_mask = 0x7700;
   c->vc_hi_font_mask = 0;
-*/
+  */
+  printk(KERN_INFO "Finished gcon_init!\n")
 }
 
 
@@ -237,7 +241,7 @@ static int gcon_set_origin(struct vc_data *c) {
     write_ah(AH_PWR_REG_ADDR, 1);
   return 1;
   */
-  return 1;
+  return 0;
 }
 
 static bool gcon_scroll(struct vc_data *c,unsigned int top,
@@ -473,17 +477,17 @@ const struct consw gcon = {
   .con_blank =        gcon_blank,
   .con_font_set =     gcon_font_set, /* not supported (yet) */
   .con_font_default = gcon_font_default,
-  .con_font_get =     NULL,
+  //.con_font_get =     NULL,
   .con_font_copy =    gcon_font_copy,
-  .con_resize =       NULL, /* not supported yet - this should
-                         be easy to implement */
-  .con_set_palette =  gcon_set_palette,
-  .con_scrolldelta =  NULL,
-  .con_set_origin =   gcon_set_origin,
-  .con_save_screen =  NULL,
-  .con_build_attr =   gcon_build_attr,
-  .con_invert_region = NULL, /* let vt.c handle this crap */
-  .con_screen_pos =   NULL,
-  .con_getxy =        gcon_getxy
+  //.con_resize =       NULL, /* not supported yet - this should
+                         //be easy to implement */
+  //.con_set_palette =  gcon_set_palette,
+  //.con_scrolldelta =  NULL,
+  //.con_set_origin =   gcon_set_origin,
+  //.con_save_screen =  NULL,
+  //.con_build_attr =   gcon_build_attr,
+  //.con_invert_region = NULL, /* let vt.c handle this crap */
+  //.con_screen_pos =   NULL,
+  //.con_getxy =        gcon_getxy,
 };
 EXPORT_SYMBOL_GPL(gcon);

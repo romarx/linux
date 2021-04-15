@@ -1,10 +1,10 @@
+#include <linux/types.h>
 #include <linux/kdev_t.h>
+#include <linux/console.h>
+#include <linux/vt_kern.h>
 #include <linux/screen_info.h>
 #include <linux/init.h>
 #include <linux/module.h>
-#include <linux/types.h>
-#include <linux/vt_kern.h>
-#include <linux/console.h>
 //#include <linux/console_struct.h>
 //#include <linux/io.h>
 //#include <linux/ioport.h>
@@ -213,7 +213,7 @@ static void gcon_init(struct vc_data *c, int init) {
   c->vc_complement_mask = 0x7700;
   c->vc_hi_font_mask = 0;
   */
-  printk(KERN_INFO "Finished gcon_init!\n")
+  printk(KERN_INFO "Finished gcon_init!\n");
 }
 
 
@@ -379,7 +379,7 @@ static void gcon_deinit(struct vc_data * c) {
 
 
 
-
+/*
 static void write_ah(int offset, u32 data) {
   if (mapped_base)
     writel(data, (volatile void *) mapped_base+offset);
@@ -391,10 +391,11 @@ static u32 read_ah(int offset) {
     return readl((const volatile void *) mapped_base+offset);
   else return 0;
 }
-
+*/
 /*
    keeps power status reg as-is
 */
+/*
 static void write_text_p_ah(dma_addr_t p) {
   u32 pwr = read_ah(AH_PWR_REG_ADDR);
   pwr |= (1<<16);
@@ -422,6 +423,7 @@ static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
   curs_reg |= (end << 0);
   return curs_reg;
 }
+*/
 static void gcon_putcs(struct vc_data *c, const unsigned short *a, int b, int k, int d) {
     
 }

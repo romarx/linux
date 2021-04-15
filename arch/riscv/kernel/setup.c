@@ -93,12 +93,12 @@ pr_info("setup.c wants to conswitch\n");
 
 #ifdef CONFIG_VT
 	pr_info("CONFIG_VT set\n");
-#if defined(CONFIG_G_CONSOLE)
-	pr_info("Attempting to set conswitch = &gcon\n");
-	conswitchp = &gcon;
-#elif defined(CONFIG_DUMMY_CONSOLE)
+#if defined(CONFIG_DUMMY_CONSOLE)
 	pr_info("Attempting to set conswitch = &dummy_con\n");
 	conswitchp = &dummy_con;
+#elif defined(CONFIG_G_CONSOLE)
+	pr_info("Attempting to set conswitch = &gcon\n");
+	conswitchp = &gcon;
 #endif
 #endif
 

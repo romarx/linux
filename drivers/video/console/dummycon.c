@@ -145,7 +145,8 @@ static void dummycon_init(struct vc_data *vc, int init)
   	vc->vc_font.height = 2*GCON_FONTW;
   	vc->vc_complement_mask = 0x7700;
   	vc->vc_hi_font_mask = 0;
-	
+
+	lolheresanerror
 
 	pr_info("Finished dummycon_init!\n");
 }

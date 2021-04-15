@@ -12,7 +12,6 @@
 #include <linux/screen_info.h>
 #include <linux/init.h>
 #include <linux/module.h>
-#include <linux/kernel.h>
 
 /*
  *  Dummy console driver
@@ -23,13 +22,12 @@
 #define DUMMY_ROWS	screen_info.orig_video_lines
 #else
 /* set by Kconfig. Use 80x25 for 640x480 and 160x64 for 1280x1024 */
-pr_info("Using cols/rows from config\n");
+
 #define DUMMY_COLUMNS	CONFIG_DUMMY_CONSOLE_COLUMNS
 #define DUMMY_ROWS	CONFIG_DUMMY_CONSOLE_ROWS
 #endif
 
 #ifdef CONFIG_FRAMEBUFFER_CONSOLE_DEFERRED_TAKEOVER
-pr_info("FB deferred takeover set\n");
 /* These are both protected by the console_lock */
 static RAW_NOTIFIER_HEAD(dummycon_output_nh);
 static bool dummycon_putc_called;
@@ -79,7 +77,6 @@ static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
 	return 1;
 }
 #else
-pr_info("FB deferred takeover not set\n");
 static void dummycon_putc(struct vc_data *vc, int c, int ypos, int xpos) { }
 static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
 			   int count, int ypos, int xpos) { }

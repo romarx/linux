@@ -1,14 +1,17 @@
-#include <linux/module.h>
 #include <linux/types.h>
-#include <linux/vt_kern.h>
+#include <linux/kdev_t.h>
 #include <linux/console.h>
-#include <linux/console_struct.h>
-#include <linux/io.h>
-#include <linux/ioport.h>
-#include <linux/slab.h>
-#include <asm/io.h>
-#include <asm-generic/io.h>
-#include <linux/dma-mapping.h>
+#include <linux/vt_kern.h>
+#include <linux/screen_info.h>
+#include <linux/init.h>
+#include <linux/module.h>
+//#include <linux/console_struct.h>
+//#include <linux/io.h>
+//#include <linux/ioport.h>
+//#include <linux/slab.h>
+//#include <asm/io.h>
+//#include <asm-generic/io.h>
+//#include <linux/dma-mapping.h>
 
 #define BLANK                   0x0020
 #define AH_BASE                 0x19000000
@@ -127,8 +130,9 @@ static u16* text_buf = NULL;
 static dma_addr_t blank_buf_phys = 0, text_buf_phys = 0;
 
 static const char *  gcon_startup(void) {
-
+  printk(KERN_INFO "Entered gcon_startup\n");
   const char *display_desc = "AXI_HDMI Text Mode Console";
+  /*
   u8 max_fontfac_w, max_fontfac_h, max_fontfac;
   u8 fontfac_param;
   printk(KERN_INFO "Entered gcon_startup\n");
@@ -182,15 +186,17 @@ static const char *  gcon_startup(void) {
   write_ah(AH_HVSYNC_REG_ADDR, (GCON_HSYNC<<16) + GCON_VSYNC);
   font_factor = fontfac_param;
   gcon_init_done = 1;
+  */
   return display_desc;
 }
 
 static void gcon_init(struct vc_data *c, int init) {
+  printk(KERN_INFO "Entered gcon_init\n");
   if (!c) {
     printk(KERN_ERR "Got null vc_data struct in gcon_init!\n");
     return;
   }
-  printk(KERN_INFO "Entered gcon_init\n");
+  
   printk(KERN_INFO "Initializing gcon for console #%d\n", c->vc_num);
   c->vc_can_do_color = 1;
   /* unsure what the init is about */
@@ -201,14 +207,19 @@ static void gcon_init(struct vc_data *c, int init) {
 		vc_resize(c, GCON_TEXT_COLS, GCON_TEXT_ROWS);
   /* let's hope this works - in some configurations of
      screen resolution and #cols/rows, we have to blank */
+  /*
   c->vc_scan_lines = GCON_VIDEO_LINES;
   c->vc_font.height = 2*GCON_FONTW;
   c->vc_complement_mask = 0x7700;
   c->vc_hi_font_mask = 0;
+  */
+  printk(KERN_INFO "Finished gcon_init!\n");
 }
 
 
 static int gcon_set_origin(struct vc_data *c) {
+  printk(KERN_INFO "Entered gcon_set_origin\n");
+  /*
   u32 curr_p;
   u32 pwr;
   dma_addr_t tp_phys_actual;
@@ -229,19 +240,23 @@ static int gcon_set_origin(struct vc_data *c) {
   if (!(pwr & 0x1))
     write_ah(AH_PWR_REG_ADDR, 1);
   return 1;
+  */
+  return 0;
 }
 
 static bool gcon_scroll(struct vc_data *c,unsigned int top,
                         unsigned int bottom, enum con_scroll dir,
                         unsigned int lines) {
   // is this right?????
+  printk(KERN_INFO "Entered gcon_scroll\n");
   return false;
 }
 
 
 static int gcon_switch(struct vc_data *c) {
-  /* maybe update pointer here?? */
-  return 1; /* just redraw to be sure... */
+  printk(KERN_INFO "Entered gcon_switch\n");
+  /* maybe update pointer here?? */ //original returns 1
+  return 0; /* just redraw to be sure... */
 }
 
 static u8 gcon_build_attr(struct vc_data * c, u8 color, u8 intensity, u8 blink,
@@ -268,7 +283,9 @@ static u8 gcon_build_attr(struct vc_data * c, u8 color, u8 intensity, u8 blink,
 
 static unsigned long gcon_getxy(struct vc_data *c, unsigned long pos,
                                 int *px, int *py) {
-  unsigned long ret;
+  printk(KERN_INFO "Entered gcon_getxy\n");
+  
+  /*unsigned long ret;
 	int x, y;
 
 	if (pos >= c->vc_origin && pos < c->vc_scr_end) {
@@ -286,21 +303,22 @@ static unsigned long gcon_getxy(struct vc_data *c, unsigned long pos,
 		*px = x;
 	if (py)
 		*py = y;
-  return ret;
+  return ret;*/
+  return 0;
 }
 
 static int gcon_blank(struct vc_data *c, int blank, int mode_switch) {
-
-
+  printk(KERN_INFO "Entered gcon_blank\n");
+  /*
   switch (blank) {
-  case 0: /*unblank*/
+  case 0: //unblank
     if (text_buf_phys)
       write_text_p_ah(text_buf_phys);
     else
       write_text_p_ah((dma_addr_t) virt_to_phys((volatile void *)c->vc_origin));
-    return 1; /* whatever this means... */
+    return 1; // whatever this means... 
   case 1:
-  default: /*blank*/
+  default: //blank
     if (blank_buf_phys)
       write_text_p_ah(blank_buf_phys);
     else if (blank_buf)
@@ -311,10 +329,13 @@ static int gcon_blank(struct vc_data *c, int blank, int mode_switch) {
     }
     return 1;
   }
+  */
   return 0;
 }
 
 static void gcon_cursor(struct vc_data *c, int mode) {
+  printk(KERN_INFO "Entered gcon_cursor\n");
+  /*
   u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
   switch (mode) {
   case CM_ERASE:
@@ -322,7 +343,7 @@ static void gcon_cursor(struct vc_data *c, int mode) {
     break;
   case CM_MOVE:
   case CM_DRAW:
-    /* for now only check for CUR_NONE */
+    /* for now only check for CUR_NONE 
     if ((c->vc_cursor_type & 0x0f) == CUR_NONE)
       cur &= 0xffffdfff;
     else {
@@ -333,13 +354,17 @@ static void gcon_cursor(struct vc_data *c, int mode) {
       cur |= x<<24;
       cur |= y<<16;
     }
+    
   }
   write_ah(AH_CURSOR_PARAM_ADDR, cur);
+  */
 }
 
 
 
 static void gcon_deinit(struct vc_data * c) {
+ printk(KERN_INFO "Entered gcon_deinit\n");
+ /*
   write_ah(AH_PWR_REG_ADDR, 0);
   iounmap(mapped_base);
   release_mem_region(AH_BASE, 4096);
@@ -349,11 +374,12 @@ static void gcon_deinit(struct vc_data * c) {
   else
     kfree((void *)text_buf);
   blank_buf = NULL;
+  */
 }
 
 
 
-
+/*
 static void write_ah(int offset, u32 data) {
   if (mapped_base)
     writel(data, (volatile void *) mapped_base+offset);
@@ -365,10 +391,11 @@ static u32 read_ah(int offset) {
     return readl((const volatile void *) mapped_base+offset);
   else return 0;
 }
-
+*/
 /*
    keeps power status reg as-is
 */
+/*
 static void write_text_p_ah(dma_addr_t p) {
   u32 pwr = read_ah(AH_PWR_REG_ADDR);
   pwr |= (1<<16);
@@ -396,16 +423,17 @@ static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
   curs_reg |= (end << 0);
   return curs_reg;
 }
+*/
 static void gcon_putcs(struct vc_data *c, const unsigned short *a, int b, int k, int d) {
-    mb();
+    
 }
 
 static void gcon_putc(struct vc_data *c, int a, int b, int k) {
-    mb();
+    
 }
 
 static void gcon_set_palette(struct vc_data *vc, const unsigned char *table) {
-    mb();
+    
 }
 
 static int gcon_dummy(struct vc_data *c)
@@ -415,32 +443,53 @@ static int gcon_dummy(struct vc_data *c)
 
 #define DUMMY (void *) gcon_dummy
 
+static void gcon_clear(struct vc_data *vc, int sy, int sx, int height,
+			   int width) { }
+
+static int gcon_font_set(struct vc_data *vc, struct console_font *font,
+			     unsigned int flags)
+{
+	return 0;
+}
+
+static int gcon_font_default(struct vc_data *vc,
+				 struct console_font *font, char *name)
+{
+	return 0;
+}
+
+static int gcon_font_copy(struct vc_data *vc, int con)
+{
+	return 0;
+}
+
 /* this driver is still in pre-alpha phase so
    lots of NULL's */
 const struct consw gcon = {
-  .owner = THIS_MODULE,
-  .con_startup = gcon_startup,
-  .con_init = gcon_init,
-  .con_deinit = gcon_deinit ,
-  .con_clear = DUMMY,
-  .con_putc = gcon_putc,
-  .con_putcs = gcon_putcs,
-  .con_cursor = gcon_cursor,
-  .con_scroll = gcon_scroll,
-  .con_switch = gcon_switch,
-  .con_blank = gcon_blank,
-  .con_font_set = NULL, /* not supported (yet) */
-  .con_font_get = NULL,
-  .con_font_copy = NULL,
-  .con_resize = NULL, /* not supported yet - this should
-                         be easy to implement */
-  .con_set_palette = gcon_set_palette,
-  .con_scrolldelta = NULL,
-  .con_set_origin = gcon_set_origin,
-  .con_save_screen = NULL,
-  .con_build_attr = gcon_build_attr,
-  .con_invert_region = NULL, /* let vt.c handle this crap */
-  .con_screen_pos = NULL,
-  .con_getxy = gcon_getxy
+  .owner =            THIS_MODULE,
+  .con_startup =      gcon_startup,
+  .con_init =         gcon_init,
+  .con_deinit =       gcon_deinit ,
+  .con_clear =        gcon_clear,
+  .con_putc =         gcon_putc,
+  .con_putcs =        gcon_putcs,
+  .con_cursor =       gcon_cursor,
+  .con_scroll =       gcon_scroll,
+  .con_switch =       gcon_switch,
+  .con_blank =        gcon_blank,
+  .con_font_set =     gcon_font_set, /* not supported (yet) */
+  .con_font_default = gcon_font_default,
+  //.con_font_get =     NULL,
+  .con_font_copy =    gcon_font_copy,
+  //.con_resize =       NULL, /* not supported yet - this should
+                         //be easy to implement */
+  //.con_set_palette =  gcon_set_palette,
+  //.con_scrolldelta =  NULL,
+  //.con_set_origin =   gcon_set_origin,
+  //.con_save_screen =  NULL,
+  //.con_build_attr =   gcon_build_attr,
+  //.con_invert_region = NULL, /* let vt.c handle this crap */
+  //.con_screen_pos =   NULL,
+  //.con_getxy =        gcon_getxy,
 };
 EXPORT_SYMBOL_GPL(gcon);

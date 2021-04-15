@@ -100,10 +100,11 @@ static void dummycon_init(struct vc_data *vc, int init)
 	pr_info("Entered dummycon_init\n");
     vc->vc_can_do_color = 1;
     if (init) {
-	vc->vc_cols = DUMMY_COLUMNS;
-	vc->vc_rows = DUMMY_ROWS;
-    } else
-	vc_resize(vc, DUMMY_COLUMNS, DUMMY_ROWS);
+		vc->vc_cols = DUMMY_COLUMNS;
+		vc->vc_rows = DUMMY_ROWS;
+    } else {
+		vc_resize(vc, DUMMY_COLUMNS, DUMMY_ROWS);
+	}
 
 	/*
 	vc->vc_scan_lines = GCON_VIDEO_LINES;

@@ -17,6 +17,43 @@
  *  Dummy console driver
  */
 
+#define BLANK                   0x0020
+#define AH_BASE                 0x19000000
+/*
+  Offsets relative to AH_BASE
+*/
+#define AH_PNTRQ_ADDR           0x0
+#define AH_HVTOT_REG_ADDR       0x8
+#define AH_HVACT_REG_ADDR       0x10
+#define AH_HVFRONT_REG_ADDR     0x18
+#define AH_HVSYNC_REG_ADDR      0x20
+#define AH_PWR_REG_ADDR         0x28
+#define AH_CURR_PNTR_ADDR       0x30
+#define AH_TEXT_PARAM_ADDR      0x38
+#define AH_CURSOR_PARAM_ADDR    0x40
+#define AH_FG_COLOR_START_ADDR  0x400
+#define AH_BG_COLOR_START_ADDR  0x800
+
+
+/*
+  hardcode video format like a bad boy (SVGA60)
+*/
+#define GCON_VIDEO_LINES 600
+#define GCON_VIDEO_COLS 800
+#define GCON_HTOT 1056
+#define GCON_VTOT 628
+#define GCON_HFRONT 40
+#define GCON_VFRONT 1
+#define GCON_HSYNC 128
+#define GCON_VSYNC 4
+/* log2 of #frames of blink interval */
+#define GCON_BLINK_T 5
+/* font hardcoded for now */
+#define GCON_FONTW 8
+#define GCON_TEXT_ROWS 37
+#define GCON_TEXT_COLS 100
+
+
 #if defined(__arm__)
 #define DUMMY_COLUMNS	screen_info.orig_video_cols
 #define DUMMY_ROWS	screen_info.orig_video_lines
@@ -103,12 +140,12 @@ static void dummycon_init(struct vc_data *vc, int init)
 		vc_resize(vc, DUMMY_COLUMNS, DUMMY_ROWS);
 	}
 
-	/*
+	
 	vc->vc_scan_lines = GCON_VIDEO_LINES;
   	vc->vc_font.height = 2*GCON_FONTW;
   	vc->vc_complement_mask = 0x7700;
   	vc->vc_hi_font_mask = 0;
-	*/
+	
 
 	pr_info("Finished dummycon_init!\n");
 }

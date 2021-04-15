@@ -22,13 +22,13 @@
 #define DUMMY_ROWS	screen_info.orig_video_lines
 #else
 /* set by Kconfig. Use 80x25 for 640x480 and 160x64 for 1280x1024 */
-printk(KERN_INFO "Using cols/rows from config\n");
+pr_info("Using cols/rows from config\n");
 #define DUMMY_COLUMNS	CONFIG_DUMMY_CONSOLE_COLUMNS
 #define DUMMY_ROWS	CONFIG_DUMMY_CONSOLE_ROWS
 #endif
 
 #ifdef CONFIG_FRAMEBUFFER_CONSOLE_DEFERRED_TAKEOVER
-printk(KERN_INFO "FB deferred takeover set\n");
+pr_info("FB deferred takeover set\n");
 /* These are both protected by the console_lock */
 static RAW_NOTIFIER_HEAD(dummycon_output_nh);
 static bool dummycon_putc_called;
@@ -78,7 +78,7 @@ static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
 	return 1;
 }
 #else
-printk(KERN_INFO "FB deferred takeover not set\n");
+pr_info("FB deferred takeover not set\n");
 static void dummycon_putc(struct vc_data *vc, int c, int ypos, int xpos) { }
 static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
 			   int count, int ypos, int xpos) { }
@@ -90,19 +90,20 @@ static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
 
 static const char *dummycon_startup(void)
 {
-	printk(KERN_INFO "Entered dummycon_startup\n");	
+	pr_info("Entered dummycon_startup\n");	
     return "dummy device";
 }
 
 static void dummycon_init(struct vc_data *vc, int init)
 {
-	printk(KERN_INFO "Entered dummycon_init\n");
+	pr_info("Entered dummycon_init\n");
     vc->vc_can_do_color = 1;
     if (init) {
-	vc->vc_cols = DUMMY_COLUMNS;
-	vc->vc_rows = DUMMY_ROWS;
-    } else
-	vc_resize(vc, DUMMY_COLUMNS, DUMMY_ROWS);
+		vc->vc_cols = DUMMY_COLUMNS;
+		vc->vc_rows = DUMMY_ROWS;
+    } else {
+		vc_resize(vc, DUMMY_COLUMNS, DUMMY_ROWS);
+	}
 
 	/*
 	vc->vc_scan_lines = GCON_VIDEO_LINES;
@@ -111,51 +112,51 @@ static void dummycon_init(struct vc_data *vc, int init)
   	vc->vc_hi_font_mask = 0;
 	*/
 
-	printk(KERN_INFO "Finished dummycon_init!\n");
+	pr_info("Finished dummycon_init!\n");
 }
 
 static void dummycon_deinit(struct vc_data *vc) {
-	printk(KERN_INFO "Entered dummycon_deinit\n");
+	pr_info("Entered dummycon_deinit\n");
 }
 static void dummycon_clear(struct vc_data *vc, int sy, int sx, int height,
 			   int width) {
-	printk(KERN_INFO "Entered dummycon_clear\n");
+	pr_info("Entered dummycon_clear\n");
 }
 static void dummycon_cursor(struct vc_data *vc, int mode) { 
-	printk(KERN_INFO "Entered dummycon_cursor\n");
+	pr_info("Entered dummycon_cursor\n");
 }
 
 static bool dummycon_scroll(struct vc_data *vc, unsigned int top,
 			    unsigned int bottom, enum con_scroll dir,
 			    unsigned int lines)
 {
-	printk(KERN_INFO "Entered dummycon_scroll\n");
+	pr_info("Entered dummycon_scroll\n");
 	return false;
 }
 
 static int dummycon_switch(struct vc_data *vc)
 {
-	printk(KERN_INFO "Entered dummycon_switch\n");
+	pr_info("Entered dummycon_switch\n");
 	return 0;
 }
 
 static int dummycon_font_set(struct vc_data *vc, struct console_font *font,
 			     unsigned int flags)
 {
-	printk(KERN_INFO "Entered dummycon_font_set\n");
+	pr_info("Entered dummycon_font_set\n");
 	return 0;
 }
 
 static int dummycon_font_default(struct vc_data *vc,
 				 struct console_font *font, char *name)
 {
-	printk(KERN_INFO "Entered dummycon_font_default\n");
+	pr_info("Entered dummycon_font_default\n");
 	return 0;
 }
 
 static int dummycon_font_copy(struct vc_data *vc, int con)
 {
-	printk(KERN_INFO "Entered dummycon_font_copy\n");
+	pr_info("Entered dummycon_font_copy\n");
 	return 0;
 }
 

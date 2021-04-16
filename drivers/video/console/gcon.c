@@ -13,6 +13,7 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/ioport.h>
+#include <asm/io.h>
 
 #define BLANK                   0x0020
 #define AH_BASE                 0x19000000
@@ -51,7 +52,7 @@
 #define GCON_TEXT_COLS 100
 
 static bool gcon_init_done = 0;
-
+static void * mapped_base = NULL;
 
 
 static void dummycon_putc(struct vc_data *vc, int c, int ypos, int xpos) { }
@@ -66,16 +67,45 @@ static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
 static const char *gcon_startup(void)
 {
 	pr_info("Entered gcon_startup\n");
-	//u8 max_fontfac_w, max_fontfac_h, max_fontfac;
-  	//u8 fontfac_param;
+	u8 max_fontfac_w, max_fontfac_h, max_fontfac;
+  	u8 fontfac_param;
 	if (gcon_init_done){
     	return "AXI_HDMI Text Mode Console";
 	}
 	if (!request_mem_region(AH_BASE, 4096, "G Console AXI2HDMI driver")){
     	printk(KERN_ALERT "Failed to reserve A2H IO Address Space!\n");
-    	return "AXI_HDMI Text Mode Console not working!";
+    	return "AXI_HDMI Text Mode Console no memory reserved";
   	}
 	pr_info("requesting memory region succeeded!\n");
+	
+	if (!(mapped_base = ioremap((resource_size_t)AH_BASE, 4096))) {
+    	printk(KERN_ALERT "IOremap failed\n");
+		mapped_base = NULL;
+    	return "AXI_HDMI Text Mode Console no ioremap";
+  	}
+	pr_info("ioremap worked, mapped base: %p\n", mapped_base);
+
+	
+	max_fontfac_w = GCON_VIDEO_COLS/(GCON_TEXT_COLS*GCON_FONTW);
+  	max_fontfac_h = GCON_VIDEO_LINES/(GCON_TEXT_ROWS*2*GCON_FONTW);
+  	max_fontfac = (max_fontfac_w < max_fontfac_h) ? max_fontfac_w : max_fontfac_h;
+	fontfac_param = 0;
+  	switch(max_fontfac) {
+  	case 2:
+    	fontfac_param = 1;
+    	break;
+  	case 3:
+    	fontfac_param = 1;
+    	break;
+  	case 4:
+    	fontfac_param = 2;
+    	break;
+  	default:
+    	break;
+  	}
+	
+	pr_info("fontfac param calculated\n");
+
 	
 
 
@@ -102,7 +132,10 @@ static void gcon_init(struct vc_data *vc, int init)
 
 }
 
-static void dummycon_deinit(struct vc_data *vc) { }
+static void gcon_deinit(struct vc_data *vc) {
+	pr_info("Entered gcon_deinit");
+	iounmap(mapped_base);
+}
 static void dummycon_clear(struct vc_data *vc, int sy, int sx, int height,
 			   int width) { }
 static void dummycon_cursor(struct vc_data *vc, int mode) { }
@@ -146,7 +179,7 @@ const struct consw gcon = {
 	.owner =		THIS_MODULE,
 	.con_startup =	gcon_startup,
 	.con_init =		gcon_init,
-	.con_deinit =	dummycon_deinit,
+	.con_deinit =	gcon_deinit,
 	.con_clear =	dummycon_clear,
 	.con_putc =		dummycon_putc,
 	.con_putcs =	dummycon_putcs,

@@ -17,49 +17,11 @@
  *  Dummy console driver
  */
 
-#define BLANK                   0x0020
-#define AH_BASE                 0x19000000
-/*
-  Offsets relative to AH_BASE
-*/
-#define AH_PNTRQ_ADDR           0x0
-#define AH_HVTOT_REG_ADDR       0x8
-#define AH_HVACT_REG_ADDR       0x10
-#define AH_HVFRONT_REG_ADDR     0x18
-#define AH_HVSYNC_REG_ADDR      0x20
-#define AH_PWR_REG_ADDR         0x28
-#define AH_CURR_PNTR_ADDR       0x30
-#define AH_TEXT_PARAM_ADDR      0x38
-#define AH_CURSOR_PARAM_ADDR    0x40
-#define AH_FG_COLOR_START_ADDR  0x400
-#define AH_BG_COLOR_START_ADDR  0x800
-
-
-/*
-  hardcode video format like a bad boy (SVGA60)
-*/
-#define GCON_VIDEO_LINES 600
-#define GCON_VIDEO_COLS 800
-#define GCON_HTOT 1056
-#define GCON_VTOT 628
-#define GCON_HFRONT 40
-#define GCON_VFRONT 1
-#define GCON_HSYNC 128
-#define GCON_VSYNC 4
-/* log2 of #frames of blink interval */
-#define GCON_BLINK_T 5
-/* font hardcoded for now */
-#define GCON_FONTW 8
-#define GCON_TEXT_ROWS 37
-#define GCON_TEXT_COLS 100
-
-
 #if defined(__arm__)
 #define DUMMY_COLUMNS	screen_info.orig_video_cols
 #define DUMMY_ROWS	screen_info.orig_video_lines
 #else
 /* set by Kconfig. Use 80x25 for 640x480 and 160x64 for 1280x1024 */
-
 #define DUMMY_COLUMNS	CONFIG_DUMMY_CONSOLE_COLUMNS
 #define DUMMY_ROWS	CONFIG_DUMMY_CONSOLE_ROWS
 #endif
@@ -125,72 +87,50 @@ static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
 
 static const char *dummycon_startup(void)
 {
-	pr_info("Entered dummycon_startup\n");	
     return "dummy device";
 }
 
 static void dummycon_init(struct vc_data *vc, int init)
 {
-	pr_info("Entered dummycon_init\n");
     vc->vc_can_do_color = 1;
     if (init) {
-		vc->vc_cols = DUMMY_COLUMNS;
-		vc->vc_rows = DUMMY_ROWS;
-    } else {
-		vc_resize(vc, DUMMY_COLUMNS, DUMMY_ROWS);
-	}
-
-	
-	vc->vc_scan_lines = GCON_VIDEO_LINES;
-  	vc->vc_font.height = 2*GCON_FONTW;
-  	vc->vc_complement_mask = 0x7700;
-  	vc->vc_hi_font_mask = 0;
-
-	pr_info("Finished dummycon_init!\n");
+	vc->vc_cols = DUMMY_COLUMNS;
+	vc->vc_rows = DUMMY_ROWS;
+    } else
+	vc_resize(vc, DUMMY_COLUMNS, DUMMY_ROWS);
 }
 
-static void dummycon_deinit(struct vc_data *vc) {
-	pr_info("Entered dummycon_deinit\n");
-}
+static void dummycon_deinit(struct vc_data *vc) { }
 static void dummycon_clear(struct vc_data *vc, int sy, int sx, int height,
-			   int width) {
-	pr_info("Entered dummycon_clear\n");
-}
-static void dummycon_cursor(struct vc_data *vc, int mode) { 
-	pr_info("Entered dummycon_cursor\n");
-}
+			   int width) { }
+static void dummycon_cursor(struct vc_data *vc, int mode) { }
 
 static bool dummycon_scroll(struct vc_data *vc, unsigned int top,
 			    unsigned int bottom, enum con_scroll dir,
 			    unsigned int lines)
 {
-	pr_info("Entered dummycon_scroll\n");
 	return false;
 }
 
 static int dummycon_switch(struct vc_data *vc)
 {
-	pr_info("Entered dummycon_switch\n");
 	return 0;
 }
 
 static int dummycon_font_set(struct vc_data *vc, struct console_font *font,
 			     unsigned int flags)
 {
-	pr_info("Entered dummycon_font_set\n");
 	return 0;
 }
 
 static int dummycon_font_default(struct vc_data *vc,
 				 struct console_font *font, char *name)
 {
-	pr_info("Entered dummycon_font_default\n");
 	return 0;
 }
 
 static int dummycon_font_copy(struct vc_data *vc, int con)
 {
-	pr_info("Entered dummycon_font_copy\n");
 	return 0;
 }
 

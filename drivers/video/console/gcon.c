@@ -14,6 +14,7 @@
 #include <linux/module.h>
 #include <linux/ioport.h>
 #include <asm/io.h>
+#include <linux/slab.h>
 //#include <linux/dma-mapping.h>
 
 #define BLANK                   0x0020
@@ -112,6 +113,7 @@ static const char *gcon_startup(void)
 	
 	pr_info("fontfac param calculated\n");
 	/* this kills everything
+
 	if (!(blank_buf = (u16 *)dma_alloc_coherent(NULL, GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), &blank_buf_phys, GFP_KERNEL))) {
     	pr_info("Failed to allocate buffer of no color!\n");
     	blank_buf_phys = 0;
@@ -128,6 +130,22 @@ static const char *gcon_startup(void)
   	}
 	pr_info("dma_alloc_coherent worked for text buf\n");
 	*/
+
+	//Using kmalloc (I don't know how safe this is yet)
+	if(!(blank_buf = kmalloc(GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), GFP_KERNEL))){
+		pr_info("Failed to allocate blank buffer memory with kmalloc.\n");
+		return "AXI_HDMI Text Mode Console no blank buf";
+	}
+	pr_info("kmalloc worked for blank buf\n");
+
+	if(!(blank_buf = kmalloc(GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), GFP_KERNEL))){
+		pr_info("Failed to allocate text buffer memory with kmalloc.\n");
+		return "AXI_HDMI Text Mode Console no text buf";
+	}
+	pr_info("kmalloc worked for text buf\n");
+
+
+
 
 	gcon_init_done = 1;
     return "AXI_HDMI Text Mode Console";

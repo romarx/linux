@@ -69,7 +69,7 @@ static const char *gcon_startup(void)
 	//u8 max_fontfac_w, max_fontfac_h, max_fontfac;
   	//u8 fontfac_param;
 	if (gcon_init_done){
-    	return"AXI_HDMI Text Mode Console";
+    	return "AXI_HDMI Text Mode Console";
 	}
 	if (!request_mem_region(AH_BASE, 4096, "G Console AXI2HDMI driver")){
     	printk(KERN_ALERT "Failed to reserve A2H IO Address Space!\n");

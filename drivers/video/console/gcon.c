@@ -62,6 +62,7 @@ static bool dummycon_putc_called;
 
 void dummycon_register_output_notifier(struct notifier_block *nb)
 {
+	pr_info("register output notifier called!");
 	raw_notifier_chain_register(&dummycon_output_nh, nb);
 
 	if (dummycon_putc_called)
@@ -70,11 +71,13 @@ void dummycon_register_output_notifier(struct notifier_block *nb)
 
 void dummycon_unregister_output_notifier(struct notifier_block *nb)
 {
+	pr_info("unregister output notifier called!");
 	raw_notifier_chain_unregister(&dummycon_output_nh, nb);
 }
 
 static void dummycon_putc(struct vc_data *vc, int c, int ypos, int xpos)
 {
+	pr_info("register output notifier putc called!");
 	dummycon_putc_called = true;
 	raw_notifier_call_chain(&dummycon_output_nh, 0, NULL);
 }
@@ -82,6 +85,7 @@ static void dummycon_putc(struct vc_data *vc, int c, int ypos, int xpos)
 static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
 			   int count, int ypos, int xpos)
 {
+	pr_info("register output notifier putcs called!");
 	int i;
 
 	if (!dummycon_putc_called) {
@@ -101,6 +105,7 @@ static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
 
 static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
 {
+	pr_info("register output notifier blank called!");
 	/* Redraw, so that we get putc(s) for output done while blanked */
 	return 1;
 }
@@ -114,21 +119,23 @@ static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
 }
 #endif
 
-static const char *dummycon_startup(void)
+static const char *gcon_startup(void)
 {
 	pr_info("Entered gcon_startup\n");
     return "gcon device";
 }
 
-static void dummycon_init(struct vc_data *vc, int init)
+static void gcon_init(struct vc_data *vc, int init)
 {
 	pr_info("Entered gcon_init\n");
     vc->vc_can_do_color = 1;
     if (init) {
-	vc->vc_cols = GCON_TEXT_COLS;
-	vc->vc_rows = GCON_TEXT_ROWS;
-    } else
-	vc_resize(vc, GCON_TEXT_COLS, GCON_TEXT_ROWS);
+		vc->vc_cols = GCON_TEXT_COLS;
+		vc->vc_rows = GCON_TEXT_ROWS;
+    } else {
+		vc_resize(vc, GCON_TEXT_COLS, GCON_TEXT_ROWS);
+	}
+
 }
 
 static void dummycon_deinit(struct vc_data *vc) { }
@@ -173,8 +180,8 @@ static int dummycon_font_copy(struct vc_data *vc, int con)
 
 const struct consw gcon = {
 	.owner =		THIS_MODULE,
-	.con_startup =	dummycon_startup,
-	.con_init =		dummycon_init,
+	.con_startup =	gcon_startup,
+	.con_init =		gcon_init,
 	.con_deinit =	dummycon_deinit,
 	.con_clear =	dummycon_clear,
 	.con_putc =		dummycon_putc,

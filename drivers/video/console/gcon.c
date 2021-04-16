@@ -12,6 +12,7 @@
 #include <linux/screen_info.h>
 #include <linux/init.h>
 #include <linux/module.h>
+#include <linux/ioport.h>
 
 #define BLANK                   0x0020
 #define AH_BASE                 0x19000000
@@ -49,68 +50,10 @@
 #define GCON_TEXT_ROWS 37
 #define GCON_TEXT_COLS 100
 
+static bool gcon_init_done = 0;
 
-/* set by Kconfig. Use 80x25 for 640x480 and 160x64 for 1280x1024 
-#define DUMMY_COLUMNS	CONFIG_DUMMY_CONSOLE_COLUMNS
-#define DUMMY_ROWS	CONFIG_DUMMY_CONSOLE_ROWS
-*/
-/*
-#ifdef CONFIG_FRAMEBUFFER_CONSOLE_DEFERRED_TAKEOVER
-/* These are both protected by the console_lock 
-static RAW_NOTIFIER_HEAD(dummycon_output_nh);
-static bool dummycon_putc_called;
 
-void dummycon_register_output_notifier(struct notifier_block *nb)
-{
-	pr_info("register output notifier called!");
-	raw_notifier_chain_register(&dummycon_output_nh, nb);
 
-	if (dummycon_putc_called)
-		nb->notifier_call(nb, 0, NULL);
-}
-
-void dummycon_unregister_output_notifier(struct notifier_block *nb)
-{
-	pr_info("unregister output notifier called!");
-	raw_notifier_chain_unregister(&dummycon_output_nh, nb);
-}
-
-static void dummycon_putc(struct vc_data *vc, int c, int ypos, int xpos)
-{
-	pr_info("register output notifier putc called!");
-	dummycon_putc_called = true;
-	raw_notifier_call_chain(&dummycon_output_nh, 0, NULL);
-}
-
-static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
-			   int count, int ypos, int xpos)
-{
-	pr_info("register output notifier putcs called!");
-	int i;
-
-	if (!dummycon_putc_called) {
-		/* Ignore erases 
-		for (i = 0 ; i < count; i++) {
-			if (s[i] != vc->vc_video_erase_char)
-				break;
-		}
-		if (i == count)
-			return;
-
-		dummycon_putc_called = true;
-	}
-
-	raw_notifier_call_chain(&dummycon_output_nh, 0, NULL);
-}
-
-static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
-{
-	pr_info("register output notifier blank called!");
-	/* Redraw, so that we get putc(s) for output done while blanked 
-	return 1;
-}
-#else
-*/
 static void dummycon_putc(struct vc_data *vc, int c, int ypos, int xpos) { }
 static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
 			   int count, int ypos, int xpos) { }
@@ -123,7 +66,20 @@ static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
 static const char *gcon_startup(void)
 {
 	pr_info("Entered gcon_startup\n");
-    return "gcon device";
+	//u8 max_fontfac_w, max_fontfac_h, max_fontfac;
+  	//u8 fontfac_param;
+	if (gcon_init_done){
+    	return"AXI_HDMI Text Mode Console";
+	}
+	if (!request_mem_region(AH_BASE, 4096, "G Console AXI2HDMI driver")){
+    	printk(KERN_ALERT "Failed to reserve A2H IO Address Space!\n");
+    	return "AXI_HDMI Text Mode Console not working!";
+  	}
+	
+
+
+	gcon_init_done = 1;
+    return "AXI_HDMI Text Mode Console";
 }
 
 static void gcon_init(struct vc_data *vc, int init)

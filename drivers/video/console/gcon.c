@@ -14,6 +14,7 @@
 #include <linux/module.h>
 #include <linux/ioport.h>
 #include <asm/io.h>
+#include <linux/dma-mapping.h>
 
 #define BLANK                   0x0020
 #define AH_BASE                 0x19000000
@@ -54,6 +55,11 @@
 static bool gcon_init_done = 0;
 static void * mapped_base = NULL;
 
+static u16* blank_buf = NULL;
+static u16* text_buf = NULL;
+
+static dma_addr_t blank_buf_phys = 0, text_buf_phys = 0;
+
 
 static void dummycon_putc(struct vc_data *vc, int c, int ypos, int xpos) { }
 static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
@@ -83,7 +89,7 @@ static const char *gcon_startup(void)
 		mapped_base = NULL;
     	return "AXI_HDMI Text Mode Console no ioremap";
   	}
-	pr_info("ioremap worked, mapped base: %p\n", mapped_base);
+	pr_info("ioremap worked, mapped base: %pK\n", mapped_base);
 
 	
 	max_fontfac_w = GCON_VIDEO_COLS/(GCON_TEXT_COLS*GCON_FONTW);
@@ -106,8 +112,22 @@ static const char *gcon_startup(void)
 	
 	pr_info("fontfac param calculated\n");
 
-	
+	if (!(blank_buf = (u16 *)dma_alloc_coherent(NULL, GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), &blank_buf_phys, GFP_KERNEL))) {
+    	pr_info("Failed to allocate buffer of no color!\n");
+    	blank_buf_phys = 0;
+		return "AXI_HDMI Text Mode Console no blank buf";
 
+	}
+	pr_info("dma_alloc_coherent worked for blank buf\n");
+
+	
+	if (!(text_buf = (u16 *)dma_alloc_coherent(NULL, GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), &text_buf_phys, GFP_KERNEL))) {
+    	pr_info("Failed to allocate buffer of text!\n");
+		text_buf_phys = 0;
+		return "AXI_HDMI Text Mode Console no text buf";
+  	}
+	pr_info("dma_alloc_coherent worked for text buf\n");
+	
 
 	gcon_init_done = 1;
     return "AXI_HDMI Text Mode Console";
@@ -135,6 +155,11 @@ static void gcon_init(struct vc_data *vc, int init)
 static void gcon_deinit(struct vc_data *vc) {
 	pr_info("Entered gcon_deinit");
 	iounmap(mapped_base);
+	release_mem_region(AH_BASE, 4096);
+	mapped_base = NULL;
+
+	//TODO: deallocate dma memory
+
 }
 static void dummycon_clear(struct vc_data *vc, int sy, int sx, int height,
 			   int width) { }

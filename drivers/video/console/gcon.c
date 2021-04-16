@@ -13,18 +13,47 @@
 #include <linux/init.h>
 #include <linux/module.h>
 
+#define BLANK                   0x0020
+#define AH_BASE                 0x19000000
 /*
- *  Dummy console driver
- */
+  Offsets relative to AH_BASE
+*/
+#define AH_PNTRQ_ADDR           0x0
+#define AH_HVTOT_REG_ADDR       0x8
+#define AH_HVACT_REG_ADDR       0x10
+#define AH_HVFRONT_REG_ADDR     0x18
+#define AH_HVSYNC_REG_ADDR      0x20
+#define AH_PWR_REG_ADDR         0x28
+#define AH_CURR_PNTR_ADDR       0x30
+#define AH_TEXT_PARAM_ADDR      0x38
+#define AH_CURSOR_PARAM_ADDR    0x40
+#define AH_FG_COLOR_START_ADDR  0x400
+#define AH_BG_COLOR_START_ADDR  0x800
 
-#if defined(__arm__)
-#define DUMMY_COLUMNS	screen_info.orig_video_cols
-#define DUMMY_ROWS	screen_info.orig_video_lines
-#else
-/* set by Kconfig. Use 80x25 for 640x480 and 160x64 for 1280x1024 */
+
+/*
+  hardcode video format like a bad boy (SVGA60)
+*/
+#define GCON_VIDEO_LINES 600
+#define GCON_VIDEO_COLS 800
+#define GCON_HTOT 1056
+#define GCON_VTOT 628
+#define GCON_HFRONT 40
+#define GCON_VFRONT 1
+#define GCON_HSYNC 128
+#define GCON_VSYNC 4
+/* log2 of #frames of blink interval */
+#define GCON_BLINK_T 5
+/* font hardcoded for now */
+#define GCON_FONTW 8
+#define GCON_TEXT_ROWS 37
+#define GCON_TEXT_COLS 100
+
+
+/* set by Kconfig. Use 80x25 for 640x480 and 160x64 for 1280x1024 
 #define DUMMY_COLUMNS	CONFIG_DUMMY_CONSOLE_COLUMNS
 #define DUMMY_ROWS	CONFIG_DUMMY_CONSOLE_ROWS
-#endif
+*/
 
 #ifdef CONFIG_FRAMEBUFFER_CONSOLE_DEFERRED_TAKEOVER
 /* These are both protected by the console_lock */
@@ -96,10 +125,10 @@ static void dummycon_init(struct vc_data *vc, int init)
 	pr_info("Entered gcon_init\n");
     vc->vc_can_do_color = 1;
     if (init) {
-	vc->vc_cols = DUMMY_COLUMNS;
-	vc->vc_rows = DUMMY_ROWS;
+	vc->vc_cols = GCON_TEXT_COLS;
+	vc->vc_rows = GCON_TEXT_ROWS;
     } else
-	vc_resize(vc, DUMMY_COLUMNS, DUMMY_ROWS);
+	vc_resize(vc, GCON_TEXT_COLS, GCON_TEXT_ROWS);
 }
 
 static void dummycon_deinit(struct vc_data *vc) { }

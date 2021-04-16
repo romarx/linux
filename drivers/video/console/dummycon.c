@@ -87,11 +87,13 @@ static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
 
 static const char *dummycon_startup(void)
 {
+	pr_info("Entered dummycon_startup\n");
     return "dummy device";
 }
 
 static void dummycon_init(struct vc_data *vc, int init)
 {
+	pr_info("Entered dummycon_init\n");
     vc->vc_can_do_color = 1;
     if (init) {
 	vc->vc_cols = DUMMY_COLUMNS;

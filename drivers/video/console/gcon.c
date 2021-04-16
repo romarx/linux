@@ -54,9 +54,9 @@
 #define DUMMY_COLUMNS	CONFIG_DUMMY_CONSOLE_COLUMNS
 #define DUMMY_ROWS	CONFIG_DUMMY_CONSOLE_ROWS
 */
-
+/*
 #ifdef CONFIG_FRAMEBUFFER_CONSOLE_DEFERRED_TAKEOVER
-/* These are both protected by the console_lock */
+/* These are both protected by the console_lock 
 static RAW_NOTIFIER_HEAD(dummycon_output_nh);
 static bool dummycon_putc_called;
 
@@ -89,7 +89,7 @@ static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
 	int i;
 
 	if (!dummycon_putc_called) {
-		/* Ignore erases */
+		/* Ignore erases 
 		for (i = 0 ; i < count; i++) {
 			if (s[i] != vc->vc_video_erase_char)
 				break;
@@ -106,10 +106,11 @@ static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
 static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
 {
 	pr_info("register output notifier blank called!");
-	/* Redraw, so that we get putc(s) for output done while blanked */
+	/* Redraw, so that we get putc(s) for output done while blanked 
 	return 1;
 }
 #else
+*/
 static void dummycon_putc(struct vc_data *vc, int c, int ypos, int xpos) { }
 static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
 			   int count, int ypos, int xpos) { }
@@ -117,7 +118,7 @@ static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
 {
 	return 0;
 }
-#endif
+//#endif
 
 static const char *gcon_startup(void)
 {
@@ -135,6 +136,12 @@ static void gcon_init(struct vc_data *vc, int init)
     } else {
 		vc_resize(vc, GCON_TEXT_COLS, GCON_TEXT_ROWS);
 	}
+
+	vc->vc_scan_lines = GCON_VIDEO_LINES;
+  	vc->vc_font.height = 2*GCON_FONTW;
+  	vc->vc_complement_mask = 0x7700;
+  	vc->vc_hi_font_mask = 0;
+	pr_info("Finish gcon_init\n");
 
 }
 

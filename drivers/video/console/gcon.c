@@ -75,6 +75,7 @@ static const char *gcon_startup(void)
     	printk(KERN_ALERT "Failed to reserve A2H IO Address Space!\n");
     	return "AXI_HDMI Text Mode Console not working!";
   	}
+	pr_info("requesting memory region succeeded!");
 	
 
 

@@ -14,7 +14,7 @@
 #include <linux/module.h>
 #include <linux/ioport.h>
 #include <asm/io.h>
-#include <linux/dma-mapping.h>
+//#include <linux/dma-mapping.h>
 
 #define BLANK                   0x0020
 #define AH_BASE                 0x19000000
@@ -111,7 +111,7 @@ static const char *gcon_startup(void)
   	}
 	
 	pr_info("fontfac param calculated\n");
-
+	/* this kills everything
 	if (!(blank_buf = (u16 *)dma_alloc_coherent(NULL, GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), &blank_buf_phys, GFP_KERNEL))) {
     	pr_info("Failed to allocate buffer of no color!\n");
     	blank_buf_phys = 0;
@@ -127,7 +127,7 @@ static const char *gcon_startup(void)
 		return "AXI_HDMI Text Mode Console no text buf";
   	}
 	pr_info("dma_alloc_coherent worked for text buf\n");
-	
+	*/
 
 	gcon_init_done = 1;
     return "AXI_HDMI Text Mode Console";

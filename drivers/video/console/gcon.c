@@ -286,6 +286,7 @@ static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
   curs_reg |= (blink_t << 5);
   curs_reg |= (end << 0);
   return curs_reg;
+}
 
 const struct consw gcon = {
 	.owner =		THIS_MODULE,

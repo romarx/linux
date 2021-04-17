@@ -153,7 +153,7 @@ static const char *gcon_startup(void)
 	}
 	pr_info("kmalloc worked for blank buf\n");
 
-	if(!(blank_buf = kmalloc(GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), GFP_KERNEL))){
+	if(!(text_buf = kmalloc(GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), GFP_KERNEL))){
 		pr_info("Failed to allocate text buffer memory with kmalloc.\n");
 		return "AXI_HDMI Text Mode Console no text buf";
 	}
@@ -202,6 +202,12 @@ static void gcon_deinit(struct vc_data *vc) {
 	iounmap(mapped_base);
 	release_mem_region(AH_BASE, 4096);
 	mapped_base = NULL;
+	if(blank_buf){
+		kfree((void*) blank_buf);
+	}
+	if(text_buf){
+		kfree((void*) text_buf);
+	}
 
 	//TODO: deallocate dma memory
 

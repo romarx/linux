@@ -127,7 +127,7 @@ static const char *gcon_startup(void)
   	}
 	
 	pr_info("fontfac param calculated\n");
-	/* this kills everything
+	/* this breaks everything
 
 	if (!(blank_buf = (u16 *)dma_alloc_coherent(NULL, GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), &blank_buf_phys, GFP_KERNEL))) {
     	pr_info("Failed to allocate buffer of no color!\n");
@@ -252,7 +252,6 @@ static int dummycon_font_copy(struct vc_data *vc, int con)
 static void write_ah(int offset, u32 data) {
   if (mapped_base)
     writel(data, (volatile void *) mapped_base+offset);
-  mb();
 }
 
 static u32 read_ah(int offset) {

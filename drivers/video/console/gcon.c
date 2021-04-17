@@ -56,10 +56,13 @@
 static bool gcon_init_done = 0;
 static void * mapped_base = NULL;
 
+static int font_factor;
+
 static u16* blank_buf = NULL;
 static u16* text_buf = NULL;
 
-static dma_addr_t blank_buf_phys = 0, text_buf_phys = 0;
+//would like to use this but doesn't work atm.
+//static dma_addr_t blank_buf_phys = 0, text_buf_phys = 0;
 
 /* --------------------------------
    Internal Functions
@@ -68,7 +71,7 @@ static dma_addr_t blank_buf_phys = 0, text_buf_phys = 0;
 static void write_ah(int offset, u32 data);
 static u32 read_ah(int offset);
 static u32 read_current_p_ah(void);
-static void write_text_p_ah(dma_addr_t);
+static void write_text_p_ah(u16*);
 static u32 gen_textparam_reg(u16 cols, u16 rows);
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
                                u8 enable, u8 blink_t);
@@ -171,7 +174,7 @@ static const char *gcon_startup(void)
 	font_factor = fontfac_param;
 	gcon_init_done = 1;
     
-	pr_info("gcon setup done\n");
+	pr_info("gcon startup done\n");
 	return "AXI_HDMI Text Mode Console";
 }
 

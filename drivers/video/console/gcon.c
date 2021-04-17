@@ -61,6 +61,18 @@ static u16* text_buf = NULL;
 
 static dma_addr_t blank_buf_phys = 0, text_buf_phys = 0;
 
+/* --------------------------------
+   Internal Functions
+   -------------------------------- */
+
+static void write_ah(int offset, u32 data);
+static u32 read_ah(int offset);
+static u32 read_current_p_ah(void);
+static void write_text_p_ah(dma_addr_t);
+static u32 gen_textparam_reg(u16 cols, u16 rows);
+static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
+                               u8 enable, u8 blink_t);
+
 
 static void dummycon_putc(struct vc_data *vc, int c, int ypos, int xpos) { }
 static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
@@ -145,10 +157,22 @@ static const char *gcon_startup(void)
 	pr_info("kmalloc worked for text buf\n");
 
 
-
-
+	// on startup, power off AXI_HDMI
+  	write_ah(AH_PWR_REG_ADDR, 0);
+  	write_ah(AH_TEXT_PARAM_ADDR, gen_textparam_reg(GCON_TEXT_COLS, GCON_TEXT_ROWS));
+	// cursor off by default
+  	write_ah(AH_CURSOR_PARAM_ADDR, gen_cursorparam_reg(0,0,0,2*GCON_FONTW-1, fontfac_param, 0, GCON_BLINK_T));
+	//set timings
+	write_ah(AH_HVACT_REG_ADDR, (GCON_VIDEO_COLS<<16) + GCON_VIDEO_LINES);
+  	write_ah(AH_HVTOT_REG_ADDR, (GCON_HTOT<<16) + GCON_VTOT);
+  	write_ah(AH_HVFRONT_REG_ADDR, (GCON_HFRONT<<16) + GCON_VFRONT);
+  	write_ah(AH_HVSYNC_REG_ADDR, (GCON_HSYNC<<16) + GCON_VSYNC);
+  	
+	font_factor = fontfac_param;
 	gcon_init_done = 1;
-    return "AXI_HDMI Text Mode Console";
+    
+	pr_info("gcon setup done\n");
+	return "AXI_HDMI Text Mode Console";
 }
 
 static void gcon_init(struct vc_data *vc, int init)
@@ -212,11 +236,53 @@ static int dummycon_font_copy(struct vc_data *vc, int con)
 	return 0;
 }
 
-/*
- *  The console `switch' structure for the dummy console
- *
- *  Most of the operations are dummies.
- */
+/* --------------------------------
+   Internal Functions
+   -------------------------------- */
+
+static void write_ah(int offset, u32 data) {
+  if (mapped_base)
+    writel(data, (volatile void *) mapped_base+offset);
+  mb();
+}
+
+static u32 read_ah(int offset) {
+  if (mapped_base)
+    return readl((const volatile void *) mapped_base+offset);
+  else return 0;
+}
+
+/* 
+keeps power status reg as-is 
+
+original has a dma_addr_t instead of u16*
+*/
+static void write_text_p_ah(u16 *p) {
+  u32 pwr = read_ah(AH_PWR_REG_ADDR);
+  pwr |= (1<<16);
+  write_ah(AH_PWR_REG_ADDR, pwr);
+  write_ah(AH_PNTRQ_ADDR, (u32) p);
+}
+
+ static u32 read_current_p_ah(void) {
+   return read_ah(AH_CURR_PNTR_ADDR);
+ }
+
+static u32 gen_textparam_reg(u16 cols, u16 rows) {
+  return ((cols<<16)+rows);
+}
+
+static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
+                               u8 enable, u8 blink_t) {
+  u32 curs_reg = 0;
+  curs_reg |= (col << 24);
+  curs_reg |= (row << 16);
+  curs_reg |= (font_fac << 14);
+  curs_reg |= (enable << 13);
+  curs_reg |= (start << 8);
+  curs_reg |= (blink_t << 5);
+  curs_reg |= (end << 0);
+  return curs_reg;
 
 const struct consw gcon = {
 	.owner =		THIS_MODULE,

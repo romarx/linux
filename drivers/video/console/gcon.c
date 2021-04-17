@@ -84,7 +84,6 @@ static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
 {
 	return 0;
 }
-//#endif
 
 static const char *gcon_startup(void)
 {
@@ -195,6 +194,11 @@ static void gcon_init(struct vc_data *vc, int init)
   	vc->vc_hi_font_mask = 0;
 	pr_info("Finish gcon_init\n");
 
+}
+
+static int gcon_set_origin(struct vc_data *c) {
+	pr_info("Entered gcon_set_origin\n");
+	return 1;
 }
 
 static void gcon_deinit(struct vc_data *vc) {
@@ -308,5 +312,6 @@ const struct consw gcon = {
 	.con_font_set =	dummycon_font_set,
 	.con_font_default =	dummycon_font_default,
 	.con_font_copy =	dummycon_font_copy,
+	.con_set_origin = gcon_set_origin,
 };
 EXPORT_SYMBOL_GPL(gcon);

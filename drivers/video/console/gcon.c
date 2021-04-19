@@ -347,10 +347,10 @@ static void write_ah(int offset, u32 data)
 		writel(data, (volatile void *)mapped_base + offset);
 }
 
-static u32 read_ah(int offset)
+static u64 read_ah(int offset)
 {
 	if (mapped_base)
-		return readl((const volatile void *)mapped_base + offset);
+		return readq((const volatile void *)mapped_base + offset);
 	else
 		return 0;
 }
@@ -368,7 +368,7 @@ static void write_text_p_ah(unsigned long p)
 	write_ah(AH_PNTRQ_ADDR, p);
 }
 
-static u32 read_current_p_ah(void)
+static u64 read_current_p_ah(void)
 {
 	return read_ah(AH_CURR_PNTR_ADDR);
 }

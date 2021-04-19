@@ -55,8 +55,8 @@ static void *mapped_base = NULL;
 
 static int font_factor;
 
-static u16 *blank_buf = NULL;
-static u16 *text_buf = NULL;
+static unsigned short *blank_buf = NULL;
+static unsigned short *text_buf = NULL;
 
 //would like to use this but doesn't work atm.
 //static dma_addr_t blank_buf_phys = 0, text_buf_phys = 0;
@@ -151,20 +151,20 @@ static const char *gcon_startup(void)
 	pr_info("dma_alloc_coherent worked for text buf\n");
 	*/
 
-	//Using kmalloc (I don't know how safe this is yet)
-	if (!(blank_buf = kmalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
-				  GFP_KERNEL))) {
-		pr_info("Failed to allocate blank buffer memory with kmalloc.\n");
-		return "AXI_HDMI Text Mode Console no blank buf";
+	//Using kmalloc (I don't know how safe this is yet) use GFP_USER or GFP_KERNEL (in vt, GFP_USER is used)
+	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
+				  GFP_USER))) {
+		pr_info("Failed to allocate blank buffer memory with kzalloc.\n");
+		return -ENOMEM;
 	}
-	pr_info("kmalloc worked for blank buf\n");
+	pr_info("kzalloc worked for blank buf\n");
 
-	if (!(text_buf = kmalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
-				 GFP_KERNEL))) {
-		pr_info("Failed to allocate text buffer memory with kmalloc.\n");
-		return "AXI_HDMI Text Mode Console no text buf";
+	if (!(text_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
+				 GFP_USER))) {
+		pr_info("Failed to allocate text buffer memory with kzalloc.\n");
+		return -ENOMEM;
 	}
-	pr_info("kmalloc worked for text buf\n");
+	pr_info("kzalloc worked for text buf\n");
 
 	// on startup, power off AXI_HDMI
 	write_ah(AH_PWR_REG_ADDR, 0);
@@ -195,7 +195,7 @@ static void gcon_init(struct vc_data *vc, int init)
 		vc->vc_cols = GCON_TEXT_COLS;
 		vc->vc_rows = GCON_TEXT_ROWS;
 	} else {
-		vc_resize(vc, GCON_TEXT_COLS, GCON_TEXT_ROWS);
+		vc_resize(vc, GCON_TEXT_COLS, GCON_TEXT_ROWS); //if this gets called, vcorigin gets set in vt.c???
 	}
 
 	vc->vc_scan_lines = GCON_VIDEO_LINES;
@@ -225,7 +225,7 @@ static void gcon_deinit(struct vc_data *vc)
 		kfree((void *)text_buf);
 	}
 
-	//TODO: deallocate dma memory
+	//TODO: add everything neeced here
 }
 static void gcon_clear(struct vc_data *vc, int sy, int sx, int height,
 		       int width)

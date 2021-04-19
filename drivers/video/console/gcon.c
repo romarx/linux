@@ -292,17 +292,17 @@ static void dummycon_clear(struct vc_data *vc, int sy, int sx, int height,
 static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 				int *py)
 {
-	pr_info("Entered gcon_getxy!\n");
 	unsigned long ret;
 	int x, y;
 
 	if (pos >= vc->vc_origin && pos < vc->vc_scr_end) {
 		unsigned long offset = (pos - vc->vc_origin) / 2;
-
+		pr_info("gcon_getxy! works somehow\n");
 		x = offset % vc->vc_cols;
 		y = offset / vc->vc_cols;
 		ret = pos;
 	} else {
+		pr_info("gcon_getxy! set zero\n");
 		x = 0;
 		y = 0;
 		ret = vc->vc_origin;

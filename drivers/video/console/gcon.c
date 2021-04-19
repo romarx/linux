@@ -205,12 +205,13 @@ static void gcon_init(struct vc_data *vc, int init)
 
 static int gcon_set_origin(struct vc_data *c) {
   pr_info("Entered gcon_set_origin");
-  u32 curr_p;
+  u32 curr_p,curr_p_after;
   u32 pwr;
   unsigned long tp_phys_actual;
 
   curr_p = read_current_p_ah();
   pwr = read_ah(AH_PWR_REG_ADDR);
+  pr_info("Current pointer: %x", curr_p);
   if(text_buf){
 	pr_info("Attempt setting pointer to origin");
     c->vc_origin = (unsigned long) text_buf;
@@ -222,6 +223,10 @@ static int gcon_set_origin(struct vc_data *c) {
     write_text_p_ah(tp_phys_actual);
   if (!(pwr & 0x1))
     write_ah(AH_PWR_REG_ADDR, 1);
+ 
+  curr_p_after = read_current_p_ah();
+  pr_info("Current pointer after setting: %x", curr_p_after);
+  
   return 1;
 }
 
@@ -353,7 +358,7 @@ static u32 read_ah(int offset)
 /* 
 keeps power status reg as-is 
 
-original has a dma_addr_t instead of u16*
+original has a dma_addr_t instead of unsigned long
 */
 static void write_text_p_ah(unsigned long p)
 {

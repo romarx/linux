@@ -202,6 +202,7 @@ static void gcon_init(struct vc_data *vc, int init)
 	pr_info("Finish gcon_init\n");
 }
 
+/*
 static int gcon_set_origin(struct vc_data *c) {
   u32 curr_p;
   u32 pwr;
@@ -209,7 +210,7 @@ static int gcon_set_origin(struct vc_data *c) {
 
   curr_p = read_current_p_ah();
   pwr = read_ah(AH_PWR_REG_ADDR);
-  if(text_buf){}
+  if(text_buf){
     c->vc_origin = (unsigned long) text_buf;
     tp_phys_actual = virt_to_phys(text_buf);
   } 
@@ -220,6 +221,8 @@ static int gcon_set_origin(struct vc_data *c) {
     write_ah(AH_PWR_REG_ADDR, 1);
   return 1;
 }
+*/
+
 
 static void gcon_deinit(struct vc_data *vc)
 {

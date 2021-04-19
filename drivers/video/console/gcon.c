@@ -222,6 +222,31 @@ static void dummycon_clear(struct vc_data *vc, int sy, int sx, int height,
 {
 }
 
+static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
+				int *py)
+{
+	pr_info("Entered gcon_getxy!");
+	unsigned long ret;
+	int x, y;
+
+	if (pos >= vc->vc_origin && pos < vc->vc_scr_end) {
+		unsigned long offset = (pos - vc->vc_origin) / 2;
+
+		x = offset % vc->vc_cols;
+		y = offset / vc->vc_cols;
+		ret = pos;
+	} else {
+		x = 0;
+		y = 0;
+		ret = vc->vc_origin;
+	}
+	if (px)
+		*px = x;
+	if (py)
+		*py = y;
+	return ret;
+}
+
 static void gcon_cursor(struct vc_data *vc, int mode)
 {
 	pr_info("Entered gcon_cursor");
@@ -233,11 +258,11 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 	case CM_MOVE:
 	case CM_DRAW:
 		/* for now only check for CUR_NONE */
-		if ((c->vc_cursor_type & 0x0f) == CUR_NONE)
+		if ((vc->vc_cursor_type & 0x0f) == CUR_NONE)
 			cur &= 0xffffdfff;
 		else {
 			int x, y;
-			gcon_getxy(c, c->vc_pos, &x, &y);
+			gcon_getxy(vc, vc->vc_pos, &x, &y);
 			cur |= 0x00002000;
 			cur &= 0x0000ffff;
 			cur |= x << 24;
@@ -347,5 +372,6 @@ const struct consw gcon = {
 	.con_font_set = dummycon_font_set,
 	.con_font_default = dummycon_font_default,
 	.con_font_copy = dummycon_font_copy,
+	.con_getxy = gcon_getxy,
 };
 EXPORT_SYMBOL_GPL(gcon);

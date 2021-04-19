@@ -211,7 +211,7 @@ static int gcon_set_origin(struct vc_data *vc) {
 
   curr_p = read_current_p_ah();
   pwr = read_ah(AH_PWR_REG_ADDR);
-  pr_info("Current pointer: %x", curr_p);
+  pr_info("Current pointer: %llx", curr_p);
   if(text_buf){
 	pr_info("Attempt setting pointer to origin");
     vc->vc_origin = (unsigned long) text_buf;
@@ -225,7 +225,7 @@ static int gcon_set_origin(struct vc_data *vc) {
     write_ah(AH_PWR_REG_ADDR, 1);
  
   curr_p_after = read_current_p_ah();
-  pr_info("Current pointer after setting: %x", curr_p_after);
+  pr_info("Current pointer after setting: %llx", curr_p_after);
   
   return 1;
 }

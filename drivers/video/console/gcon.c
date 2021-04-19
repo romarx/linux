@@ -372,8 +372,8 @@ static void write_text_p_ah(u64 p)
 {
 	u32 pwr = read_ah(AH_PWR_REG_ADDR);
 	pwr |= (1 << 16);
-	write_ah64(AH_PWR_REG_ADDR, pwr);
-	write_ah(AH_PNTRQ_ADDR, p);
+	write_ah(AH_PWR_REG_ADDR, pwr);
+	write_ah64(AH_PNTRQ_ADDR, p);
 }
 
 static u64 read_current_p_ah(void)

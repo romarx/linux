@@ -212,6 +212,7 @@ static int gcon_set_origin(struct vc_data *c) {
   curr_p = read_current_p_ah();
   pwr = read_ah(AH_PWR_REG_ADDR);
   if(text_buf){
+	pr_info("Attempt setting pointer to origin");
     c->vc_origin = (unsigned long) text_buf;
     tp_phys_actual = virt_to_phys(text_buf);
   } 

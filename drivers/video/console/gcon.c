@@ -58,8 +58,8 @@ static void * mapped_base = NULL;
 
 static int font_factor;
 
-static u16* blank_buf = NULL;
-static u16* text_buf = NULL;
+static unsigned short* blank_buf = NULL;
+static unsigned short* text_buf = NULL;
 
 //would like to use this but doesn't work atm.
 //static dma_addr_t blank_buf_phys = 0, text_buf_phys = 0;
@@ -147,17 +147,17 @@ static const char *gcon_startup(void)
 	*/
 
 	//Using kmalloc (I don't know how safe this is yet)
-	if(!(blank_buf = kmalloc(GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), GFP_KERNEL))){
-		pr_info("Failed to allocate blank buffer memory with kmalloc.\n");
+	if(!(blank_buf = kzalloc(GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), GFP_KERNEL))){
+		pr_info("Failed to allocate blank buffer memory with kzalloc.\n");
 		return "AXI_HDMI Text Mode Console no blank buf";
 	}
-	pr_info("kmalloc worked for blank buf\n");
+	pr_info("kzalloc worked for blank buf\n");
 
-	if(!(text_buf = kmalloc(GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), GFP_KERNEL))){
-		pr_info("Failed to allocate text buffer memory with kmalloc.\n");
+	if(!(text_buf = kzalloc(GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), GFP_KERNEL))){
+		pr_info("Failed to allocate text buffer memory with kzalloc.\n");
 		return "AXI_HDMI Text Mode Console no text buf";
 	}
-	pr_info("kmalloc worked for text buf\n");
+	pr_info("kzalloc worked for text buf\n");
 
 
 	// on startup, power off AXI_HDMI

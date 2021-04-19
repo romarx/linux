@@ -85,7 +85,7 @@ static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
 }
 static int gcon_blank(struct vc_data *vc, int blank, int mode_switch)
 {
-	pr_info("Entered gcon_blank!");
+	pr_info("Entered gcon_blank!\n");
 	switch (blank) {
 	case 0: /*unblank*/
 		if (text_buf)
@@ -220,19 +220,19 @@ static void gcon_init(struct vc_data *vc, int init)
 
 static int gcon_set_origin(struct vc_data *vc)
 {
-	pr_info("Entered gcon_set_origin");
+	pr_info("Entered gcon_set_origin\n");
 	u64 curr_p, curr_p_after;
 	u32 pwr;
 	unsigned long tp_phys_actual;
 
 	curr_p = read_current_p_ah();
 	pwr = read_ah(AH_PWR_REG_ADDR);
-	pr_info("Current pointer: %llx", curr_p);
+	pr_info("Current pointer: %llx\n", curr_p);
 	if (text_buf) {
-		pr_info("Attempt setting pointer to origin");
+		pr_info("Attempt setting pointer to origin\n");
 		vc->vc_origin = (unsigned long)text_buf;
 		tp_phys_actual = virt_to_phys(text_buf);
-		pr_info("Physical address: %lx", tp_phys_actual);
+		pr_info("Physical address: %lx\n", tp_phys_actual);
 	}
 
 	if (curr_p != tp_phys_actual)
@@ -241,7 +241,7 @@ static int gcon_set_origin(struct vc_data *vc)
 		write_ah(AH_PWR_REG_ADDR, 1);
 
 	curr_p_after = read_current_p_ah();
-	pr_info("Current pointer after setting: %llx", curr_p_after);
+	pr_info("Current pointer after setting: %llx\n", curr_p_after);
 
 	return 1;
 }
@@ -249,7 +249,7 @@ static int gcon_set_origin(struct vc_data *vc)
 static u8 gcon_build_attr(struct vc_data *vc, u8 color, u8 intensity, u8 blink,
 			  u8 underline, u8 reverse, u8 italic)
 {
-	pr_info("Entered gcon_build_attr!");
+	pr_info("Entered gcon_build_attr!\n");
 	u8 attr;
 	attr = color;
 	if (italic)
@@ -270,9 +270,8 @@ static u8 gcon_build_attr(struct vc_data *vc, u8 color, u8 intensity, u8 blink,
 
 static void gcon_deinit(struct vc_data *vc)
 {
-	pr_info("Enter gcon_deinit");
+	pr_info("Enter gcon_deinit\n");
 	write_ah(AH_PWR_REG_ADDR, 0);
-	pr_info("Entered gcon_deinit");
 	iounmap(mapped_base);
 	release_mem_region(AH_BASE, 4096);
 	mapped_base = NULL;
@@ -291,7 +290,7 @@ static void dummycon_clear(struct vc_data *vc, int sy, int sx, int height,
 static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 				int *py)
 {
-	pr_info("Entered gcon_getxy!");
+	pr_info("Entered gcon_getxy!\n");
 	unsigned long ret;
 	int x, y;
 
@@ -317,7 +316,7 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 static void gcon_cursor(struct vc_data *vc, int mode)
 {
 	/*
-	pr_info("Entered gcon_cursor");
+	pr_info("Entered gcon_cursor\n");
 	u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
 	switch (mode) {
 	case CM_ERASE:
@@ -350,7 +349,7 @@ static bool dummycon_scroll(struct vc_data *vc, unsigned int top,
 
 static int gcon_switch(struct vc_data *vc)
 {
-	pr_info("Entered gcon switch");
+	pr_info("Entered gcon switch\n");
 	return 1;
 }
 

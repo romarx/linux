@@ -315,6 +315,7 @@ static int gcon_blank(struct vc_data *c, int blank, int mode_switch) {
 }
 
 static void gcon_cursor(struct vc_data *c, int mode) {
+  /*
   u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
   switch (mode) {
   case CM_ERASE:
@@ -322,7 +323,7 @@ static void gcon_cursor(struct vc_data *c, int mode) {
     break;
   case CM_MOVE:
   case CM_DRAW:
-    /* for now only check for CUR_NONE */
+    // for now only check for CUR_NONE 
     if ((c->vc_cursor_type & 0x0f) == CUR_NONE)
       cur &= 0xffffdfff;
     else {
@@ -335,6 +336,7 @@ static void gcon_cursor(struct vc_data *c, int mode) {
     }
   }
   write_ah(AH_CURSOR_PARAM_ADDR, cur);
+  */
 }
 
 

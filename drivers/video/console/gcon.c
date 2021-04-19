@@ -223,9 +223,9 @@ static bool dummycon_scroll(struct vc_data *vc, unsigned int top,
 	return false;
 }
 
-static int dummycon_switch(struct vc_data *vc)
+static int gcon_switch(struct vc_data *vc)
 {
-	return 0;
+	return 1;
 }
 
 static int dummycon_font_set(struct vc_data *vc, struct console_font *font,
@@ -303,7 +303,7 @@ const struct consw gcon = {
 	.con_putcs =	dummycon_putcs,
 	.con_cursor =	dummycon_cursor,
 	.con_scroll =	dummycon_scroll,
-	.con_switch =	dummycon_switch,
+	.con_switch =	gcon_switch,
 	.con_blank =	dummycon_blank,
 	.con_font_set =	dummycon_font_set,
 	.con_font_default =	dummycon_font_default,

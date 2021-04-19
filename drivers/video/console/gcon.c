@@ -68,9 +68,10 @@ static unsigned short *text_buf = NULL;
    -------------------------------- */
 
 static void write_ah(int offset, u32 data);
+static void write_ah64(int offset, u64 data);
 static u64 read_ah(int offset);
 static u64 read_current_p_ah(void);
-static void write_text_p_ah(unsigned long p);
+static void write_text_p_ah(u64 p);
 static u32 gen_textparam_reg(u16 cols, u16 rows);
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
 			       u8 enable, u8 blink_t);
@@ -220,7 +221,7 @@ static int gcon_set_origin(struct vc_data *vc) {
   } 
 
   if (curr_p != tp_phys_actual)
-    write_text_p_ah(tp_phys_actual);
+    write_text_p_ah((u64)tp_phys_actual);
   if (!(pwr & 0x1))
     write_ah(AH_PWR_REG_ADDR, 1);
  
@@ -347,6 +348,13 @@ static void write_ah(int offset, u32 data)
 		writel(data, (volatile void *)mapped_base + offset);
 }
 
+//this isn't very portable, fix hardware first!
+static void write_ah64(int offset, u64 data)
+{
+	if (mapped_base)
+		writeq(data, (volatile void *)mapped_base + offset);
+}
+
 static u64 read_ah(int offset)
 {
 	if (mapped_base)
@@ -360,11 +368,11 @@ keeps power status reg as-is
 
 original has a dma_addr_t instead of unsigned long
 */
-static void write_text_p_ah(unsigned long p)
+static void write_text_p_ah(u64 p)
 {
 	u32 pwr = read_ah(AH_PWR_REG_ADDR);
 	pwr |= (1 << 16);
-	write_ah(AH_PWR_REG_ADDR, pwr);
+	write_ah64(AH_PWR_REG_ADDR, pwr);
 	write_ah(AH_PNTRQ_ADDR, p);
 }
 

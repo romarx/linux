@@ -83,11 +83,26 @@ static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
 			   int count, int ypos, int xpos)
 {
 }
-static int dummycon_blank(struct vc_data *vc, int blank, int mode_switch)
+static int gcon_blank(struct vc_data *vc, int blank, int mode_switch)
 {
+	pr_info("Entered gcon_blank!");
+	switch (blank) {
+	case 0: /*unblank*/
+		if (text_buf)
+			write_text_p_ah((u64)virt_to_phys((volatile void *)vc->vc_origin));
+		return 1; /* whatever this means... */
+	case 1:
+	default: /*blank*/
+		if (blank_buf)
+			write_text_p_ah((u64)virt_to_phys(blank_buf));
+		else {
+			printk(KERN_ALERT "Blanking attempted with NULL blank_buf; Skipping\n");
+			return 0;
+		}
+		return 1;
+	}
 	return 0;
 }
-//#endif
 
 static const char *gcon_startup(void)
 {
@@ -234,6 +249,7 @@ static int gcon_set_origin(struct vc_data *vc)
 static u8 gcon_build_attr(struct vc_data *vc, u8 color, u8 intensity, u8 blink,
 			  u8 underline, u8 reverse, u8 italic)
 {
+	pr_info("Entered gcon_build_attr!");
 	u8 attr;
 	attr = color;
 	if (italic)
@@ -428,7 +444,7 @@ const struct consw gcon = {
 	.con_cursor = gcon_cursor,
 	.con_scroll = dummycon_scroll,
 	.con_switch = gcon_switch,
-	.con_blank = dummycon_blank,
+	.con_blank = gcon_blank,
 	.con_font_set = dummycon_font_set,
 	.con_font_default = dummycon_font_default,
 	.con_font_copy = dummycon_font_copy,

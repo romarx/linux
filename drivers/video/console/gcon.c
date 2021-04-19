@@ -68,8 +68,8 @@ static unsigned short *text_buf = NULL;
    -------------------------------- */
 
 static void write_ah(int offset, u32 data);
-static u32 read_ah(int offset);
-static u32 read_current_p_ah(void);
+static u64 read_ah(int offset);
+static u64 read_current_p_ah(void);
 static void write_text_p_ah(unsigned long p);
 static u32 gen_textparam_reg(u16 cols, u16 rows);
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,

@@ -203,9 +203,9 @@ static void gcon_init(struct vc_data *vc, int init)
 }
 
 
-static int gcon_set_origin(struct vc_data *c) {
+static int gcon_set_origin(struct vc_data *vc) {
   pr_info("Entered gcon_set_origin");
-  u32 curr_p,curr_p_after;
+  u64 curr_p,curr_p_after;
   u32 pwr;
   unsigned long tp_phys_actual;
 
@@ -214,7 +214,7 @@ static int gcon_set_origin(struct vc_data *c) {
   pr_info("Current pointer: %x", curr_p);
   if(text_buf){
 	pr_info("Attempt setting pointer to origin");
-    c->vc_origin = (unsigned long) text_buf;
+    vc->vc_origin = (unsigned long) text_buf;
     tp_phys_actual = virt_to_phys(text_buf);
 	pr_info("Physical address: %lx", tp_phys_actual);
   } 

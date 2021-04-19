@@ -227,6 +227,7 @@ static int gcon_set_origin(struct vc_data *c) {
 
 static void gcon_deinit(struct vc_data *vc)
 {
+	write_ah(AH_PWR_REG_ADDR, 0);
 	pr_info("Entered gcon_deinit");
 	iounmap(mapped_base);
 	release_mem_region(AH_BASE, 4096);
@@ -237,6 +238,7 @@ static void gcon_deinit(struct vc_data *vc)
 	if (text_buf) {
 		kfree((void *)text_buf);
 	}
+
 
 	//TODO: deallocate dma memory
 }
@@ -353,12 +355,12 @@ keeps power status reg as-is
 
 original has a dma_addr_t instead of u16*
 */
-static void write_text_p_ah(u16 *p)
+static void write_text_p_ah(unsigned long p)
 {
 	u32 pwr = read_ah(AH_PWR_REG_ADDR);
 	pwr |= (1 << 16);
 	write_ah(AH_PWR_REG_ADDR, pwr);
-	write_ah(AH_PNTRQ_ADDR, (u32)p);
+	write_ah(AH_PNTRQ_ADDR, p);
 }
 
 static u32 read_current_p_ah(void)

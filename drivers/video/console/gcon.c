@@ -202,11 +202,11 @@ static void gcon_init(struct vc_data *vc, int init)
 	pr_info("Finish gcon_init\n");
 }
 
-/*
+
 static int gcon_set_origin(struct vc_data *c) {
   u32 curr_p;
   u32 pwr;
-  dma_addr_t tp_phys_actual;
+  unsigned long tp_phys_actual;
 
   curr_p = read_current_p_ah();
   pwr = read_ah(AH_PWR_REG_ADDR);
@@ -221,7 +221,7 @@ static int gcon_set_origin(struct vc_data *c) {
     write_ah(AH_PWR_REG_ADDR, 1);
   return 1;
 }
-*/
+
 
 
 static void gcon_deinit(struct vc_data *vc)
@@ -399,6 +399,7 @@ const struct consw gcon = {
 	.con_font_set = dummycon_font_set,
 	.con_font_default = dummycon_font_default,
 	.con_font_copy = dummycon_font_copy,
+	.con_set_origin = gcon_set_origin,
 	//.con_getxy = gcon_getxy,
 };
 EXPORT_SYMBOL_GPL(gcon);

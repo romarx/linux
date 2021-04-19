@@ -203,35 +203,54 @@ static void gcon_init(struct vc_data *vc, int init)
 	pr_info("Finish gcon_init\n");
 }
 
+static int gcon_set_origin(struct vc_data *vc)
+{
+	pr_info("Entered gcon_set_origin");
+	u64 curr_p, curr_p_after;
+	u32 pwr;
+	unsigned long tp_phys_actual;
 
-static int gcon_set_origin(struct vc_data *vc) {
-  pr_info("Entered gcon_set_origin");
-  u64 curr_p,curr_p_after;
-  u32 pwr;
-  unsigned long tp_phys_actual;
+	curr_p = read_current_p_ah();
+	pwr = read_ah(AH_PWR_REG_ADDR);
+	pr_info("Current pointer: %llx", curr_p);
+	if (text_buf) {
+		pr_info("Attempt setting pointer to origin");
+		vc->vc_origin = (unsigned long)text_buf;
+		tp_phys_actual = virt_to_phys(text_buf);
+		pr_info("Physical address: %lx", tp_phys_actual);
+	}
 
-  curr_p = read_current_p_ah();
-  pwr = read_ah(AH_PWR_REG_ADDR);
-  pr_info("Current pointer: %llx", curr_p);
-  if(text_buf){
-	pr_info("Attempt setting pointer to origin");
-    vc->vc_origin = (unsigned long) text_buf;
-    tp_phys_actual = virt_to_phys(text_buf);
-	pr_info("Physical address: %lx", tp_phys_actual);
-  } 
+	if (curr_p != tp_phys_actual)
+		write_text_p_ah((u64)tp_phys_actual);
+	if (!(pwr & 0x1))
+		write_ah(AH_PWR_REG_ADDR, 1);
 
-  if (curr_p != tp_phys_actual)
-    write_text_p_ah((u64)tp_phys_actual);
-  if (!(pwr & 0x1))
-    write_ah(AH_PWR_REG_ADDR, 1);
- 
-  curr_p_after = read_current_p_ah();
-  pr_info("Current pointer after setting: %llx", curr_p_after);
-  
-  return 1;
+	curr_p_after = read_current_p_ah();
+	pr_info("Current pointer after setting: %llx", curr_p_after);
+
+	return 1;
 }
 
+static u8 gcon_build_attr(struct vc_data *vc, u8 color, u8 intensity, u8 blink,
+			  u8 underline, u8 reverse, u8 italic)
+{
+	u8 attr;
+	attr = color;
+	if (italic)
+		attr = (attr & 0xF0) | vc->vc_itcolor;
+	else if (underline)
+		attr = (attr & 0xf0) | vc->vc_ulcolor;
+	else if (intensity == 0)
+		attr = (attr & 0xf0) | vc->vc_halfcolor;
 
+	if (reverse)
+		attr = ((attr)&0x88) | ((((attr) >> 4) | ((attr) << 4)) & 0x77);
+	if (blink)
+		attr ^= 0x80;
+	if (intensity == 2)
+		attr ^= 0x08;
+	return attr;
+}
 
 static void gcon_deinit(struct vc_data *vc)
 {
@@ -279,7 +298,6 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 }
 */
 
-
 static void gcon_cursor(struct vc_data *vc, int mode)
 {
 	/*
@@ -306,7 +324,6 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 	write_ah(AH_CURSOR_PARAM_ADDR, cur);
 	*/
 }
-
 
 static bool dummycon_scroll(struct vc_data *vc, unsigned int top,
 			    unsigned int bottom, enum con_scroll dir,
@@ -415,8 +432,9 @@ const struct consw gcon = {
 	.con_font_set = dummycon_font_set,
 	.con_font_default = dummycon_font_default,
 	.con_font_copy = dummycon_font_copy,
-	
+
 	.con_set_origin = gcon_set_origin,
+	.con_build_attr = gcon_build_attr,
 	//.con_getxy = gcon_getxy,
 };
 EXPORT_SYMBOL_GPL(gcon);

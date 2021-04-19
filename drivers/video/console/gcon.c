@@ -227,6 +227,7 @@ static int gcon_set_origin(struct vc_data *c) {
 
 static void gcon_deinit(struct vc_data *vc)
 {
+	pr_info("Enter gcon_deinit");
 	write_ah(AH_PWR_REG_ADDR, 0);
 	pr_info("Entered gcon_deinit");
 	iounmap(mapped_base);
@@ -238,9 +239,6 @@ static void gcon_deinit(struct vc_data *vc)
 	if (text_buf) {
 		kfree((void *)text_buf);
 	}
-
-
-	//TODO: deallocate dma memory
 }
 static void dummycon_clear(struct vc_data *vc, int sy, int sx, int height,
 			   int width)

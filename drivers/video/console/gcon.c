@@ -77,7 +77,6 @@ static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
    Console Functions
    -------------------------------- */
 
-
 static void gcon_putc(struct vc_data *vc, int c, int ypos, int xpos)
 {
 }
@@ -155,14 +154,14 @@ static const char *gcon_startup(void)
 	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
 				  GFP_USER))) {
 		pr_info("Failed to allocate blank buffer memory with kzalloc.\n");
-		return -ENOMEM;
+		return "text buf missing";
 	}
 	pr_info("kzalloc worked for blank buf\n");
 
 	if (!(text_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
 				 GFP_USER))) {
 		pr_info("Failed to allocate text buffer memory with kzalloc.\n");
-		return -ENOMEM;
+		return "blank buf missing";
 	}
 	pr_info("kzalloc worked for text buf\n");
 
@@ -195,7 +194,9 @@ static void gcon_init(struct vc_data *vc, int init)
 		vc->vc_cols = GCON_TEXT_COLS;
 		vc->vc_rows = GCON_TEXT_ROWS;
 	} else {
-		vc_resize(vc, GCON_TEXT_COLS, GCON_TEXT_ROWS); //if this gets called, vcorigin gets set in vt.c???
+		vc_resize(
+			vc, GCON_TEXT_COLS,
+			GCON_TEXT_ROWS); //if this gets called, vcorigin gets set in vt.c???
 	}
 
 	vc->vc_scan_lines = GCON_VIDEO_LINES;
@@ -208,8 +209,19 @@ static void gcon_init(struct vc_data *vc, int init)
 static int gcon_set_origin(struct vc_data *c)
 {
 	pr_info("Entered gcon_set_origin\n");
+	u32 curr_p;
+	u32 pwr;
+	unsigned long tp_phys_actual;
 
-	return 1;
+	if(text_buf){
+		c->vc_origin = (unsigned long) text_buf;
+		tp_phys_actual = virt_to_phys(text_buf);
+	}
+
+	curr_p = read_current_p_ah();
+	pwr = read_ah(AH_PWR_REG_ADDR);
+
+	return 0;
 }
 
 static void gcon_deinit(struct vc_data *vc)
@@ -225,7 +237,7 @@ static void gcon_deinit(struct vc_data *vc)
 		kfree((void *)text_buf);
 	}
 
-	//TODO: add everything neeced here
+	//TODO: add everything needed here
 }
 static void gcon_clear(struct vc_data *vc, int sy, int sx, int height,
 		       int width)
@@ -259,8 +271,8 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 }
 
 static bool gcon_scroll(struct vc_data *vc, unsigned int top,
-			    unsigned int bottom, enum con_scroll dir,
-			    unsigned int lines)
+			unsigned int bottom, enum con_scroll dir,
+			unsigned int lines)
 {
 	return false;
 }
@@ -268,17 +280,17 @@ static bool gcon_scroll(struct vc_data *vc, unsigned int top,
 static int gcon_switch(struct vc_data *vc)
 {
 	//redraw (maybe update ptr here)
-	return 1;
+	return 0;
 }
 
 static int gcon_font_set(struct vc_data *vc, struct console_font *font,
-			     unsigned int flags)
+			 unsigned int flags)
 {
 	return 0;
 }
 
 static int gcon_font_default(struct vc_data *vc, struct console_font *font,
-				 char *name)
+			     char *name)
 {
 	return 0;
 }
@@ -349,7 +361,7 @@ const struct consw gcon = {
 	.con_init = gcon_init,
 	.con_deinit = gcon_deinit, //TODO
 	.con_clear = gcon_clear, //empty
-	.con_putc = gcon_putc,	//empty
+	.con_putc = gcon_putc, //empty
 	.con_putcs = gcon_putcs, //empty
 	.con_cursor = gcon_cursor, //TODO
 	.con_scroll = gcon_scroll, //empty
@@ -359,6 +371,6 @@ const struct consw gcon = {
 	.con_font_default = gcon_font_default, //empty
 	.con_font_copy = gcon_font_copy, //empty
 
-	.con_set_origin = gcon_set_origin, //TODO
+	//.con_set_origin = gcon_set_origin, //TODO
 };
 EXPORT_SYMBOL_GPL(gcon);

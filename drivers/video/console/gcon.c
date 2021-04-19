@@ -202,6 +202,25 @@ static void gcon_init(struct vc_data *vc, int init)
 	pr_info("Finish gcon_init\n");
 }
 
+static int gcon_set_origin(struct vc_data *c) {
+  u32 curr_p;
+  u32 pwr;
+  dma_addr_t tp_phys_actual;
+
+  curr_p = read_current_p_ah();
+  pwr = read_ah(AH_PWR_REG_ADDR);
+  if(text_buf){}
+    c->vc_origin = (unsigned long) text_buf;
+    tp_phys_actual = virt_to_phys(text_buf);
+  } 
+
+  if (curr_p != tp_phys_actual)
+    write_text_p_ah(tp_phys_actual);
+  if (!(pwr & 0x1))
+    write_ah(AH_PWR_REG_ADDR, 1);
+  return 1;
+}
+
 static void gcon_deinit(struct vc_data *vc)
 {
 	pr_info("Entered gcon_deinit");
@@ -248,9 +267,10 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 }
 */
 
-/*
+
 static void gcon_cursor(struct vc_data *vc, int mode)
 {
+	/*
 	pr_info("Entered gcon_cursor");
 	u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
 	switch (mode) {
@@ -272,8 +292,9 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 		}
 	}
 	write_ah(AH_CURSOR_PARAM_ADDR, cur);
+	*/
 }
-*/
+
 
 static bool dummycon_scroll(struct vc_data *vc, unsigned int top,
 			    unsigned int bottom, enum con_scroll dir,

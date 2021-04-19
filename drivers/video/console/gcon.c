@@ -69,7 +69,8 @@ static unsigned short *text_buf = NULL;
 
 static void write_ah(int offset, u32 data);
 static void write_ah64(int offset, u64 data);
-static u64 read_ah(int offset);
+static u32 read_ah(int offset);
+static u64 read_ah64(int offset);
 static u64 read_current_p_ah(void);
 static void write_text_p_ah(u64 p);
 static u32 gen_textparam_reg(u16 cols, u16 rows);
@@ -297,12 +298,10 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 
 	if (pos >= vc->vc_origin && pos < vc->vc_scr_end) {
 		unsigned long offset = (pos - vc->vc_origin) / 2;
-		pr_info("gcon_getxy! works somehow\n");
 		x = offset % vc->vc_cols;
 		y = offset / vc->vc_cols;
 		ret = pos;
 	} else {
-		pr_info("gcon_getxy! set zero\n");
 		x = 0;
 		y = 0;
 		ret = vc->vc_origin;
@@ -316,7 +315,7 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 
 static void gcon_cursor(struct vc_data *vc, int mode)
 {
-	/*
+	
 	pr_info("Entered gcon_cursor\n");
 	u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
 	switch (mode) {
@@ -338,7 +337,7 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 		}
 	}
 	write_ah(AH_CURSOR_PARAM_ADDR, cur);
-	*/
+	
 }
 
 static bool dummycon_scroll(struct vc_data *vc, unsigned int top,
@@ -388,13 +387,23 @@ static void write_ah64(int offset, u64 data)
 		writeq(data, (volatile void *)mapped_base + offset);
 }
 
-static u64 read_ah(int offset)
+static u32 read_ah(int offset)
+{
+	if (mapped_base)
+		return readl((const volatile void *)mapped_base + offset);
+	else
+		return 0;
+}
+
+static u64 read_ah64(int offset)
 {
 	if (mapped_base)
 		return readq((const volatile void *)mapped_base + offset);
 	else
 		return 0;
 }
+
+
 
 /* 
 keeps power status reg as-is 
@@ -411,7 +420,7 @@ static void write_text_p_ah(u64 p)
 
 static u64 read_current_p_ah(void)
 {
-	return read_ah(AH_CURR_PNTR_ADDR);
+	return read_ah64(AH_CURR_PNTR_ADDR);
 }
 
 static u32 gen_textparam_reg(u16 cols, u16 rows)

@@ -315,7 +315,7 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 
 static void gcon_cursor(struct vc_data *vc, int mode)
 {
-	
+	/*this is buggy
 	pr_info("Entered gcon_cursor\n");
 	u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
 	switch (mode) {
@@ -337,6 +337,7 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 		}
 	}
 	write_ah(AH_CURSOR_PARAM_ADDR, cur);
+	*/
 	
 }
 

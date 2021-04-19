@@ -89,7 +89,7 @@ static int gcon_blank(struct vc_data *vc, int blank, int mode_switch)
 	switch (blank) {
 	case 0: /*unblank*/
 		if (text_buf)
-			write_text_p_ah((u64)virt_to_phys((volatile void *)vc->vc_origin));
+			write_text_p_ah((u64)virt_to_phys((volatile void *)vc->vc_origin)); //is this okay?
 		return 1; /* whatever this means... */
 	case 1:
 	default: /*blank*/
@@ -230,6 +230,8 @@ static int gcon_set_origin(struct vc_data *vc)
 	pr_info("Current pointer: %llx\n", curr_p);
 	if (text_buf) {
 		pr_info("Attempt setting pointer to origin\n");
+		vc -> vc_screenbuf = text_buf;
+		vc -> vc_screenbuf_size = GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16);
 		vc->vc_origin = (unsigned long)text_buf;
 		tp_phys_actual = virt_to_phys(text_buf);
 		pr_info("Physical address: %lx\n", tp_phys_actual);
@@ -286,7 +288,7 @@ static void dummycon_clear(struct vc_data *vc, int sy, int sx, int height,
 			   int width)
 {
 }
-/*
+
 static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 				int *py)
 {
@@ -311,7 +313,6 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 		*py = y;
 	return ret;
 }
-*/
 
 static void gcon_cursor(struct vc_data *vc, int mode)
 {
@@ -450,6 +451,6 @@ const struct consw gcon = {
 
 	.con_set_origin = gcon_set_origin,
 	.con_build_attr = gcon_build_attr,
-	//.con_getxy = gcon_getxy,
+	.con_getxy = gcon_getxy,
 };
 EXPORT_SYMBOL_GPL(gcon);

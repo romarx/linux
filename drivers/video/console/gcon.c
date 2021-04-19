@@ -221,7 +221,7 @@ static void dummycon_clear(struct vc_data *vc, int sy, int sx, int height,
 			   int width)
 {
 }
-
+/*
 static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 				int *py)
 {
@@ -246,7 +246,9 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 		*py = y;
 	return ret;
 }
+*/
 
+/*
 static void gcon_cursor(struct vc_data *vc, int mode)
 {
 	pr_info("Entered gcon_cursor");
@@ -257,7 +259,7 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 		break;
 	case CM_MOVE:
 	case CM_DRAW:
-		/* for now only check for CUR_NONE */
+		// for now only check for CUR_NONE 
 		if ((vc->vc_cursor_type & 0x0f) == CUR_NONE)
 			cur &= 0xffffdfff;
 		else {
@@ -271,6 +273,7 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 	}
 	write_ah(AH_CURSOR_PARAM_ADDR, cur);
 }
+*/
 
 static bool dummycon_scroll(struct vc_data *vc, unsigned int top,
 			    unsigned int bottom, enum con_scroll dir,
@@ -372,6 +375,6 @@ const struct consw gcon = {
 	.con_font_set = dummycon_font_set,
 	.con_font_default = dummycon_font_default,
 	.con_font_copy = dummycon_font_copy,
-	.con_getxy = gcon_getxy,
+	//.con_getxy = gcon_getxy,
 };
 EXPORT_SYMBOL_GPL(gcon);

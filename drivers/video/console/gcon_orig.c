@@ -315,7 +315,6 @@ static int gcon_blank(struct vc_data *c, int blank, int mode_switch) {
 }
 
 static void gcon_cursor(struct vc_data *c, int mode) {
-  /*
   u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
   switch (mode) {
   case CM_ERASE:
@@ -336,7 +335,6 @@ static void gcon_cursor(struct vc_data *c, int mode) {
     }
   }
   write_ah(AH_CURSOR_PARAM_ADDR, cur);
-  */
 }
 
 

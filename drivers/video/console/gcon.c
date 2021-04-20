@@ -77,10 +77,10 @@ static u32 gen_textparam_reg(u16 cols, u16 rows);
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
 			       u8 enable, u8 blink_t);
 
-static void dummycon_putc(struct vc_data *vc, int c, int ypos, int xpos)
+static void gcon_putc(struct vc_data *vc, int c, int ypos, int xpos)
 {
 }
-static void dummycon_putcs(struct vc_data *vc, const unsigned short *s,
+static void gcon_putcs(struct vc_data *vc, const unsigned short *s,
 			   int count, int ypos, int xpos)
 {
 }
@@ -285,7 +285,7 @@ static void gcon_deinit(struct vc_data *vc)
 		kfree((void *)text_buf);
 	}
 }
-static void dummycon_clear(struct vc_data *vc, int sy, int sx, int height,
+static void gcon_clear(struct vc_data *vc, int sy, int sx, int height,
 			   int width)
 {
 }
@@ -315,8 +315,12 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 
 static void gcon_cursor(struct vc_data *vc, int mode)
 {
-	/*this is buggy
+	/*
 	pr_info("Entered gcon_cursor\n");
+	if(vc->vc_mode != KD_TEXT){
+		return;
+	}
+
 	u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
 	switch (mode) {
 	case CM_ERASE:
@@ -341,7 +345,7 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 	
 }
 
-static bool dummycon_scroll(struct vc_data *vc, unsigned int top,
+static bool gcon_scroll(struct vc_data *vc, unsigned int top,
 			    unsigned int bottom, enum con_scroll dir,
 			    unsigned int lines)
 {
@@ -354,19 +358,19 @@ static int gcon_switch(struct vc_data *vc)
 	return 1;
 }
 
-static int dummycon_font_set(struct vc_data *vc, struct console_font *font,
+static int gcon_font_set(struct vc_data *vc, struct console_font *font,
 			     unsigned int flags)
 {
 	return 0;
 }
 
-static int dummycon_font_default(struct vc_data *vc, struct console_font *font,
+static int gcon_font_default(struct vc_data *vc, struct console_font *font,
 				 char *name)
 {
 	return 0;
 }
 
-static int dummycon_font_copy(struct vc_data *vc, int con)
+static int gcon_font_copy(struct vc_data *vc, int con)
 {
 	return 0;
 }
@@ -409,7 +413,7 @@ static u64 read_ah64(int offset)
 /* 
 keeps power status reg as-is 
 
-original has a dma_addr_t instead of unsigned long
+original has a dma_addr_t instead of u64
 */
 static void write_text_p_ah(u64 p)
 {
@@ -448,16 +452,16 @@ const struct consw gcon = {
 	.con_startup = gcon_startup,
 	.con_init = gcon_init,
 	.con_deinit = gcon_deinit,
-	.con_clear = dummycon_clear,
-	.con_putc = dummycon_putc,
-	.con_putcs = dummycon_putcs,
+	.con_clear = gcon_clear,
+	.con_putc = gcon_putc,
+	.con_putcs = gcon_putcs,
 	.con_cursor = gcon_cursor,
-	.con_scroll = dummycon_scroll,
+	.con_scroll = gcon_scroll,
 	.con_switch = gcon_switch,
 	.con_blank = gcon_blank,
-	.con_font_set = dummycon_font_set,
-	.con_font_default = dummycon_font_default,
-	.con_font_copy = dummycon_font_copy,
+	.con_font_set = gcon_font_set,
+	.con_font_default = gcon_font_default,
+	.con_font_copy = gcon_font_copy,
 
 	.con_set_origin = gcon_set_origin,
 	.con_build_attr = gcon_build_attr,

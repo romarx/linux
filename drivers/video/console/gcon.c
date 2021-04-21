@@ -74,32 +74,28 @@ static u64 read_ah64(int offset);
 static u64 read_current_p_ah(void);
 static void write_text_p_ah(u64 p);
 static u32 gen_textparam_reg(u16 cols, u16 rows);
-static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
-			       u8 enable, u8 blink_t);
+static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, u8 enable, u8 blink_t);
 
-static void gcon_putc(struct vc_data *vc, int c, int ypos, int xpos)
-{
+static void gcon_putc(struct vc_data *vc, int c, int ypos, int xpos) {
 }
-static void gcon_putcs(struct vc_data *vc, const unsigned short *s, int count,
-		       int ypos, int xpos)
-{
+
+static void gcon_putcs(struct vc_data *vc, const unsigned short *s, int count, int ypos, int xpos) {
 }
-static int gcon_blank(struct vc_data *vc, int blank, int mode_switch)
-{
+
+static int gcon_blank(struct vc_data *vc, int blank, int mode_switch) {
 	pr_info("Entered gcon_blank!\n");
 	switch (blank) {
 	case 0: /*unblank*/
-		if (text_buf)
-			write_text_p_ah((u64)virt_to_phys(
-				(volatile void *)vc->vc_origin)); //is this okay?
+		if (text_buf) {
+			write_text_p_ah((u64)virt_to_phys((volatile void *)vc->vc_origin)); //is this okay?
+		}
 		return 1;
 	case 1:
 	default: /*blank*/
-		if (blank_buf)
+		if (blank_buf) {
 			write_text_p_ah((u64)virt_to_phys(blank_buf));
-		else {
-			printk(KERN_ALERT
-			       "Blanking attempted with NULL blank_buf; Skipping\n");
+		} else {
+			printk(KERN_ALERT "Blanking attempted with NULL blank_buf; Skipping\n");
 			return 0;
 		}
 		return 1;
@@ -107,8 +103,7 @@ static int gcon_blank(struct vc_data *vc, int blank, int mode_switch)
 	return 0;
 }
 
-static const char *gcon_startup(void)
-{
+static const char *gcon_startup(void) {
 	pr_info("Entered gcon_startup\n");
 	const char *display_desc = "AXI_HDMI Text Mode Console";
 	u8 max_fontfac_w, max_fontfac_h, max_fontfac;
@@ -134,9 +129,9 @@ static const char *gcon_startup(void)
 
 	max_fontfac_w = GCON_VIDEO_COLS / (GCON_TEXT_COLS * GCON_FONTW);
 	max_fontfac_h = GCON_VIDEO_LINES / (GCON_TEXT_ROWS * 2 * GCON_FONTW);
-	max_fontfac =
-		(max_fontfac_w < max_fontfac_h) ? max_fontfac_w : max_fontfac_h;
+	max_fontfac = (max_fontfac_w < max_fontfac_h) ? max_fontfac_w : max_fontfac_h;
 	fontfac_param = 0;
+
 	switch (max_fontfac) {
 	case 2:
 		fontfac_param = 1;
@@ -171,15 +166,13 @@ static const char *gcon_startup(void)
 	*/
 
 	// Using kzalloc instead of the dma engine to allocate memory for the buffers
-	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
-				  GFP_USER))) {
+	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_USER))) {
 		pr_info("Failed to allocate blank buffer memory with kzalloc.\n");
 		return NULL;
 	}
 	pr_info("kzalloc worked for blank buf\n");
 
-	if (!(text_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
-				 GFP_USER))) {
+	if (!(text_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_USER))) {
 		pr_info("Failed to allocate text buffer memory with kzalloc.\n");
 		return NULL;
 	}
@@ -187,12 +180,9 @@ static const char *gcon_startup(void)
 
 	// on startup, power off AXI_HDMI
 	write_ah(AH_PWR_REG_ADDR, 0);
-	write_ah(AH_TEXT_PARAM_ADDR,
-		 gen_textparam_reg(GCON_TEXT_COLS, GCON_TEXT_ROWS));
+	write_ah(AH_TEXT_PARAM_ADDR, gen_textparam_reg(GCON_TEXT_COLS, GCON_TEXT_ROWS));
 	// cursor off by default
-	write_ah(AH_CURSOR_PARAM_ADDR,
-		 gen_cursorparam_reg(0, 0, 0, 2 * GCON_FONTW - 1, fontfac_param,
-				     0, GCON_BLINK_T));
+	write_ah(AH_CURSOR_PARAM_ADDR, gen_cursorparam_reg(0, 0, 0, 2 * GCON_FONTW - 1, fontfac_param, 0, GCON_BLINK_T));
 	//set timings
 	write_ah(AH_HVACT_REG_ADDR, (GCON_VIDEO_COLS << 16) + GCON_VIDEO_LINES);
 	write_ah(AH_HVTOT_REG_ADDR, (GCON_HTOT << 16) + GCON_VTOT);
@@ -206,8 +196,7 @@ static const char *gcon_startup(void)
 	return "AXI_HDMI Text Mode Console";
 }
 
-static void gcon_init(struct vc_data *vc, int init)
-{
+static void gcon_init(struct vc_data *vc, int init) {
 	pr_info("Entered gcon_init\n");
 	vc->vc_can_do_color = 1;
 	if (init) {
@@ -225,8 +214,7 @@ static void gcon_init(struct vc_data *vc, int init)
 	pr_info("Finish gcon_init\n");
 }
 
-static int gcon_set_origin(struct vc_data *vc)
-{
+static int gcon_set_origin(struct vc_data *vc) {
 	pr_info("Entered gcon_set_origin\n");
 
 	u64 curr_p, curr_p_after;
@@ -236,11 +224,11 @@ static int gcon_set_origin(struct vc_data *vc)
 	curr_p = read_current_p_ah();
 	pwr = read_ah(AH_PWR_REG_ADDR);
 	pr_info("Current pointer: %llx\n", curr_p);
+
 	if (text_buf) {
 		pr_info("Attempt setting pointer to origin\n");
 		vc->vc_screenbuf = text_buf;
-		vc->vc_screenbuf_size =
-			GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16);
+		vc->vc_screenbuf_size = GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16);
 		vc->vc_origin = (unsigned long)text_buf;
 		tp_phys_actual = virt_to_phys(text_buf);
 		pr_info("Physical address: %lx\n", tp_phys_actual);
@@ -252,10 +240,12 @@ static int gcon_set_origin(struct vc_data *vc)
 	}
 
 	// give pointer for text_buffer to AH_BASE
-	if (curr_p != tp_phys_actual)
+	if (curr_p != tp_phys_actual) {
 		write_text_p_ah((u64)tp_phys_actual);
-	if (!(pwr & 0x1))
+	}
+	if (!(pwr & 0x1)) {
 		write_ah(AH_PWR_REG_ADDR, 1);
+	}
 
 	curr_p_after = read_current_p_ah();
 	pr_info("Current pointer after setting: %llx\n", curr_p_after);
@@ -263,30 +253,31 @@ static int gcon_set_origin(struct vc_data *vc)
 	return 1;
 }
 
-static u8 gcon_build_attr(struct vc_data *vc, u8 color, u8 intensity, u8 blink,
-			  u8 underline, u8 reverse, u8 italic)
-{
+static u8 gcon_build_attr(struct vc_data *vc, u8 color, u8 intensity, u8 blink, u8 underline, u8 reverse, u8 italic) {
 	//pr_info("Entered gcon_build_attr!\n");
 	u8 attr;
 	attr = color;
-	if (italic)
+	if (italic) {
 		attr = (attr & 0xF0) | vc->vc_itcolor;
-	else if (underline)
+	} else if (underline) {
 		attr = (attr & 0xf0) | vc->vc_ulcolor;
-	else if (intensity == 0)
+	} else if (intensity == 0) {
 		attr = (attr & 0xf0) | vc->vc_halfcolor;
+	}
 
-	if (reverse)
+	if (reverse) {
 		attr = ((attr)&0x88) | ((((attr) >> 4) | ((attr) << 4)) & 0x77);
-	if (blink)
+	}
+	if (blink) {
 		attr ^= 0x80;
-	if (intensity == 2)
+	}
+	if (intensity == 2) {
 		attr ^= 0x08;
+	}
 	return attr;
 }
 
-static void gcon_deinit(struct vc_data *vc)
-{
+static void gcon_deinit(struct vc_data *vc) {
 	pr_info("Enter gcon_deinit\n");
 	write_ah(AH_PWR_REG_ADDR, 0);
 	iounmap(mapped_base);
@@ -299,14 +290,10 @@ static void gcon_deinit(struct vc_data *vc)
 		kfree((void *)text_buf);
 	}
 }
-static void gcon_clear(struct vc_data *vc, int sy, int sx, int height,
-		       int width)
-{
+static void gcon_clear(struct vc_data *vc, int sy, int sx, int height, int width) {
 }
 
-static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
-				int *py)
-{
+static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px, int *py) {
 	unsigned long ret;
 	int x, y;
 
@@ -320,21 +307,23 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 		y = 0;
 		ret = vc->vc_origin;
 	}
-	if (px)
+	if (px) {
 		*px = x;
-	if (py)
+	}
+	if (py) {
 		*py = y;
+	}
 	return ret;
 }
 
-static void gcon_cursor(struct vc_data *vc, int mode)
-{
+static void gcon_cursor(struct vc_data *vc, int mode) {
 	if (vc->vc_mode != KD_TEXT) {
 		return;
 	}
 
 	u8 end = 2 * GCON_FONTW - 1;
 	u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
+
 	switch (mode) {
 	case CM_ERASE:
 		cur &= 0xffffdfff; //disable cursor
@@ -345,23 +334,19 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 			int x, y;
 		case CUR_UNDERLINE:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, end - 1, end,
-						  font_factor, 1, GCON_BLINK_T);
+			cur = gen_cursorparam_reg(x, y, end - 1, end, font_factor, 1, GCON_BLINK_T);
 			break;
 		case CUR_TWO_THIRDS:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, (end / 3), end,
-						  font_factor, 1, GCON_BLINK_T);
+			cur = gen_cursorparam_reg(x, y, (end / 3), end, font_factor, 1, GCON_BLINK_T);
 			break;
 		case CUR_LOWER_THIRD:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, ((end * 2) / 3), end,
-						  font_factor, 1, GCON_BLINK_T);
+			cur = gen_cursorparam_reg(x, y, ((end * 2) / 3), end, font_factor, 1, GCON_BLINK_T);
 			break;
 		case CUR_LOWER_HALF:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, (end / 2 + 1), end,
-						  font_factor, 1, GCON_BLINK_T);
+			cur = gen_cursorparam_reg(x, y, (end / 2 + 1), end, font_factor, 1, GCON_BLINK_T);
 			break;
 		case CUR_NONE:
 			cur &= 0xffffdfff;
@@ -369,8 +354,7 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 		default:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
 
-			cur = gen_cursorparam_reg(x, y, 0, end,
-						  font_factor, 1, GCON_BLINK_T);
+			cur = gen_cursorparam_reg(x, y, 0, end, font_factor, 1, GCON_BLINK_T);
 			break;
 		}
 		break;
@@ -378,33 +362,24 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 	write_ah(AH_CURSOR_PARAM_ADDR, cur);
 }
 
-static bool gcon_scroll(struct vc_data *vc, unsigned int top,
-			unsigned int bottom, enum con_scroll dir,
-			unsigned int lines)
-{
+static bool gcon_scroll(struct vc_data *vc, unsigned int top, unsigned int bottom, enum con_scroll dir, unsigned int lines) {
 	return false;
 }
 
-static int gcon_switch(struct vc_data *vc)
-{
+static int gcon_switch(struct vc_data *vc) {
 	//pr_info("Entered gcon switch\n");
 	return 1;
 }
 
-static int gcon_font_set(struct vc_data *vc, struct console_font *font,
-			 unsigned int flags)
-{
+static int gcon_font_set(struct vc_data *vc, struct console_font *font, unsigned int flags) {
 	return 0;
 }
 
-static int gcon_font_default(struct vc_data *vc, struct console_font *font,
-			     char *name)
-{
+static int gcon_font_default(struct vc_data *vc, struct console_font *font, char *name) {
 	return 0;
 }
 
-static int gcon_font_copy(struct vc_data *vc, int con)
-{
+static int gcon_font_copy(struct vc_data *vc, int con) {
 	return 0;
 }
 
@@ -412,33 +387,33 @@ static int gcon_font_copy(struct vc_data *vc, int con)
    Internal Functions
    -------------------------------- */
 
-static void write_ah(int offset, u32 data)
-{
-	if (mapped_base)
+static void write_ah(int offset, u32 data) {
+	if (mapped_base) {
 		writel(data, (volatile void *)mapped_base + offset);
+	}
 }
 
 //this isn't very portable, fix hardware first!
-static void write_ah64(int offset, u64 data)
-{
-	if (mapped_base)
+static void write_ah64(int offset, u64 data) {
+	if (mapped_base) {
 		writeq(data, (volatile void *)mapped_base + offset);
+	}
 }
 
-static u32 read_ah(int offset)
-{
-	if (mapped_base)
+static u32 read_ah(int offset) {
+	if (mapped_base) {
 		return readl((const volatile void *)mapped_base + offset);
-	else
+	} else {
 		return 0;
+	}
 }
 
-static u64 read_ah64(int offset)
-{
-	if (mapped_base)
+static u64 read_ah64(int offset) {
+	if (mapped_base) {
 		return readq((const volatile void *)mapped_base + offset);
-	else
+	} else {
 		return 0;
+	}
 }
 
 /* 
@@ -446,27 +421,22 @@ keeps power status reg as-is
 
 original has a dma_addr_t instead of u64 probably need to do something in HW)
 */
-static void write_text_p_ah(u64 p)
-{
+static void write_text_p_ah(u64 p) {
 	u32 pwr = read_ah(AH_PWR_REG_ADDR);
 	pwr |= (1 << 16);
 	write_ah(AH_PWR_REG_ADDR, pwr);
 	write_ah64(AH_PNTRQ_ADDR, p);
 }
 
-static u64 read_current_p_ah(void)
-{
+static u64 read_current_p_ah(void) {
 	return read_ah64(AH_CURR_PNTR_ADDR);
 }
 
-static u32 gen_textparam_reg(u16 cols, u16 rows)
-{
+static u32 gen_textparam_reg(u16 cols, u16 rows) {
 	return ((cols << 16) + rows);
 }
 
-static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
-			       u8 enable, u8 blink_t)
-{
+static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, u8 enable, u8 blink_t) {
 	u32 curs_reg = 0;
 	curs_reg |= (col << 24);
 	curs_reg |= (row << 16);

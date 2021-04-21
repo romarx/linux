@@ -151,8 +151,6 @@ static const char *gcon_startup(void)
 		break;
 	}
 
-	pr_info("fontfac param calculated\n");
-
 	/* this breaks everything
 	//attempt to allocate memory with the dma engine
 	if (!(blank_buf = (u16 *)dma_alloc_coherent(NULL, GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), &blank_buf_phys, GFP_KERNEL))) {
@@ -268,7 +266,7 @@ static int gcon_set_origin(struct vc_data *vc)
 static u8 gcon_build_attr(struct vc_data *vc, u8 color, u8 intensity, u8 blink,
 			  u8 underline, u8 reverse, u8 italic)
 {
-	pr_info("Entered gcon_build_attr!\n");
+	//pr_info("Entered gcon_build_attr!\n");
 	u8 attr;
 	attr = color;
 	if (italic)
@@ -332,7 +330,6 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 static void gcon_cursor(struct vc_data *vc, int mode)
 {
 	if (vc->vc_mode != KD_TEXT) {
-		pr_info("vc_mode not set to text\n");
 		return;
 	}
 
@@ -370,7 +367,7 @@ static bool gcon_scroll(struct vc_data *vc, unsigned int top,
 
 static int gcon_switch(struct vc_data *vc)
 {
-	pr_info("Entered gcon switch\n");
+	//pr_info("Entered gcon switch\n");
 	return 1;
 }
 

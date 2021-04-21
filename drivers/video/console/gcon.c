@@ -172,14 +172,14 @@ static const char *gcon_startup(void)
 
 	// Using kzalloc instead of the dma engine to allocate memory for the buffers
 	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
-				  GFP_DMA))) {
+				  GFP_USER))) {
 		pr_info("Failed to allocate blank buffer memory with kzalloc.\n");
 		return NULL;
 	}
 	pr_info("kzalloc worked for blank buf\n");
 
 	if (!(text_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
-				 GFP_DMA))) {
+				 GFP_USER))) {
 		pr_info("Failed to allocate text buffer memory with kzalloc.\n");
 		return NULL;
 	}

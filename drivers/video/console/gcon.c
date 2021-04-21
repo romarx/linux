@@ -368,35 +368,12 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 			cur &= 0xffffdfff;
 			break;
 		default:
-			
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			/*
 			cur = gen_cursorparam_reg(x, y, 0, end,
 						  font_factor, 1, GCON_BLINK_T);
-			*/
-			cur |= 0x00002000;
-			cur &= 0x0000ffff;
-			cur |= x << 24;
-			cur |= y << 16;
-
 			break;
 		}
 		break;
-		// for now only check for CUR_NONE
-		/*
-		if ((vc->vc_cursor_type & 0x0f) == CUR_NONE) {
-			//pr_info("Disable cursor CUR_NONE\n");
-			cur &= 0xffffdfff;
-		} else {
-			//pr_info("Enable cursor\n");
-			int x, y;
-			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur |= 0x00002000;
-			cur &= 0x0000ffff;
-			cur |= x << 24;
-			cur |= y << 16;
-		}
-		*/
 	}
 	write_ah(AH_CURSOR_PARAM_ADDR, cur);
 }

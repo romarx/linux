@@ -60,7 +60,7 @@ static int font_factor;
 static unsigned short *blank_buf = NULL;
 static unsigned short *text_buf = NULL;
 
-//would like to use this but doesn't work atm.
+//these are used with the dma engine, see set_origin
 //static dma_addr_t blank_buf_phys = 0, text_buf_phys = 0;
 
 /* --------------------------------
@@ -80,8 +80,8 @@ static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
 static void gcon_putc(struct vc_data *vc, int c, int ypos, int xpos)
 {
 }
-static void gcon_putcs(struct vc_data *vc, const unsigned short *s,
-			   int count, int ypos, int xpos)
+static void gcon_putcs(struct vc_data *vc, const unsigned short *s, int count,
+		       int ypos, int xpos)
 {
 }
 static int gcon_blank(struct vc_data *vc, int blank, int mode_switch)
@@ -90,14 +90,16 @@ static int gcon_blank(struct vc_data *vc, int blank, int mode_switch)
 	switch (blank) {
 	case 0: /*unblank*/
 		if (text_buf)
-			write_text_p_ah((u64)virt_to_phys((volatile void *)vc->vc_origin)); //is this okay?
-		return 1; /* whatever this means... */
+			write_text_p_ah((u64)virt_to_phys(
+				(volatile void *)vc->vc_origin)); //is this okay?
+		return 1;
 	case 1:
 	default: /*blank*/
 		if (blank_buf)
 			write_text_p_ah((u64)virt_to_phys(blank_buf));
 		else {
-			printk(KERN_ALERT "Blanking attempted with NULL blank_buf; Skipping\n");
+			printk(KERN_ALERT
+			       "Blanking attempted with NULL blank_buf; Skipping\n");
 			return 0;
 		}
 		return 1;
@@ -108,21 +110,25 @@ static int gcon_blank(struct vc_data *vc, int blank, int mode_switch)
 static const char *gcon_startup(void)
 {
 	pr_info("Entered gcon_startup\n");
+	const char *display_desc = "AXI_HDMI Text Mode Console";
 	u8 max_fontfac_w, max_fontfac_h, max_fontfac;
 	u8 fontfac_param;
 	if (gcon_init_done) {
-		return "AXI_HDMI Text Mode Console";
+		return display_desc;
 	}
+
+	// request memory mapped IO for PAPER
 	if (!request_mem_region(AH_BASE, 4096, "G Console AXI2HDMI driver")) {
 		printk(KERN_ALERT "Failed to reserve A2H IO Address Space!\n");
-		return "AXI_HDMI Text Mode Console no memory reserved";
+		return NULL;
 	}
 	pr_info("requesting memory region succeeded!\n");
 
+	// get a base for memory mapped IO, size of PAPER's IO is 4kb
 	if (!(mapped_base = ioremap((resource_size_t)AH_BASE, 4096))) {
 		printk(KERN_ALERT "IOremap failed\n");
 		mapped_base = NULL;
-		return "AXI_HDMI Text Mode Console no ioremap";
+		return NULL;
 	}
 	pr_info("ioremap worked, mapped base: %pK\n", mapped_base);
 
@@ -146,12 +152,13 @@ static const char *gcon_startup(void)
 	}
 
 	pr_info("fontfac param calculated\n");
-	/* this breaks everything
 
+	/* this breaks everything
+	//attempt to allocate memory with the dma engine
 	if (!(blank_buf = (u16 *)dma_alloc_coherent(NULL, GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), &blank_buf_phys, GFP_KERNEL))) {
     	pr_info("Failed to allocate buffer of no color!\n");
     	blank_buf_phys = 0;
-		return "AXI_HDMI Text Mode Console no blank buf";
+		return NULL;
 
 	}
 	pr_info("dma_alloc_coherent worked for blank buf\n");
@@ -160,23 +167,23 @@ static const char *gcon_startup(void)
 	if (!(text_buf = (u16 *)dma_alloc_coherent(NULL, GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), &text_buf_phys, GFP_KERNEL))) {
     	pr_info("Failed to allocate buffer of text!\n");
 		text_buf_phys = 0;
-		return "AXI_HDMI Text Mode Console no text buf";
+		return NULL;
   	}
 	pr_info("dma_alloc_coherent worked for text buf\n");
 	*/
 
-	//Using kmalloc (I don't know how safe this is yet)
+	// Using kzalloc instead of the dma engine to allocate memory for the buffers
 	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
 				  GFP_KERNEL))) {
 		pr_info("Failed to allocate blank buffer memory with kzalloc.\n");
-		return "AXI_HDMI Text Mode Console no blank buf";
+		return NULL;
 	}
 	pr_info("kzalloc worked for blank buf\n");
 
 	if (!(text_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
 				 GFP_KERNEL))) {
 		pr_info("Failed to allocate text buffer memory with kzalloc.\n");
-		return "AXI_HDMI Text Mode Console no text buf";
+		return NULL;
 	}
 	pr_info("kzalloc worked for text buf\n");
 
@@ -216,28 +223,37 @@ static void gcon_init(struct vc_data *vc, int init)
 	vc->vc_font.height = 2 * GCON_FONTW;
 	vc->vc_complement_mask = 0x7700;
 	vc->vc_hi_font_mask = 0;
+
 	pr_info("Finish gcon_init\n");
 }
 
 static int gcon_set_origin(struct vc_data *vc)
 {
 	pr_info("Entered gcon_set_origin\n");
+
 	u64 curr_p, curr_p_after;
 	u32 pwr;
-	unsigned long tp_phys_actual;
+	unsigned long tp_phys_actual = 0;
 
 	curr_p = read_current_p_ah();
 	pwr = read_ah(AH_PWR_REG_ADDR);
 	pr_info("Current pointer: %llx\n", curr_p);
 	if (text_buf) {
 		pr_info("Attempt setting pointer to origin\n");
-		vc -> vc_screenbuf = text_buf;
-		vc -> vc_screenbuf_size = GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16);
+		vc->vc_screenbuf = text_buf;
+		vc->vc_screenbuf_size =
+			GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16);
 		vc->vc_origin = (unsigned long)text_buf;
 		tp_phys_actual = virt_to_phys(text_buf);
 		pr_info("Physical address: %lx\n", tp_phys_actual);
 	}
 
+	if (!tp_phys_actual) {
+		pr_alert("No physical address for dma access set!");
+		return -ENOMEM;
+	}
+
+	// give pointer for text_buffer to AH_BASE
 	if (curr_p != tp_phys_actual)
 		write_text_p_ah((u64)tp_phys_actual);
 	if (!(pwr & 0x1))
@@ -286,7 +302,7 @@ static void gcon_deinit(struct vc_data *vc)
 	}
 }
 static void gcon_clear(struct vc_data *vc, int sy, int sx, int height,
-			   int width)
+		       int width)
 {
 }
 
@@ -315,23 +331,25 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
 
 static void gcon_cursor(struct vc_data *vc, int mode)
 {
-	/*
-	pr_info("Entered gcon_cursor\n");
-	if(vc->vc_mode != KD_TEXT){
+	if (vc->vc_mode != KD_TEXT) {
+		pr_info("vc_mode not set to text\n");
 		return;
 	}
 
 	u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
 	switch (mode) {
 	case CM_ERASE:
-		cur &= 0xffffdfff;
+		pr_info("Disable cursor\n");
+		cur &= 0xffffdfff; //disable cursor
 		break;
 	case CM_MOVE:
 	case CM_DRAW:
-		// for now only check for CUR_NONE 
-		if ((vc->vc_cursor_type & 0x0f) == CUR_NONE)
+		// for now only check for CUR_NONE
+		if ((vc->vc_cursor_type & 0x0f) == CUR_NONE) {
+			pr_info("Disable cursor CUR_NONE\n");
 			cur &= 0xffffdfff;
-		else {
+		} else {
+			pr_info("Enable cursor\n");
 			int x, y;
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
 			cur |= 0x00002000;
@@ -341,13 +359,11 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 		}
 	}
 	write_ah(AH_CURSOR_PARAM_ADDR, cur);
-	*/
-	
 }
 
 static bool gcon_scroll(struct vc_data *vc, unsigned int top,
-			    unsigned int bottom, enum con_scroll dir,
-			    unsigned int lines)
+			unsigned int bottom, enum con_scroll dir,
+			unsigned int lines)
 {
 	return false;
 }
@@ -359,13 +375,13 @@ static int gcon_switch(struct vc_data *vc)
 }
 
 static int gcon_font_set(struct vc_data *vc, struct console_font *font,
-			     unsigned int flags)
+			 unsigned int flags)
 {
 	return 0;
 }
 
 static int gcon_font_default(struct vc_data *vc, struct console_font *font,
-				 char *name)
+			     char *name)
 {
 	return 0;
 }
@@ -408,12 +424,10 @@ static u64 read_ah64(int offset)
 		return 0;
 }
 
-
-
 /* 
 keeps power status reg as-is 
 
-original has a dma_addr_t instead of u64
+original has a dma_addr_t instead of u64 probably need to do something in HW)
 */
 static void write_text_p_ah(u64 p)
 {

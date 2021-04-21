@@ -346,7 +346,7 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 			int x, y;
 		case CUR_UNDERLINE:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, (end / 8), end,
+			cur = gen_cursorparam_reg(x, y, end - 1, end,
 						  font_factor, 1, GCON_BLINK_T);
 			break;
 		case CUR_TWO_THIRDS:
@@ -369,8 +369,14 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 			break;
 		default:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, 0, end,
+
+			/*cur = gen_cursorparam_reg(x, y, 0, end,
 						  font_factor, 1, GCON_BLINK_T);
+						  */
+			cur |= 0x00002000;
+			cur &= 0x0000ffff;
+			cur |= x << 24;
+			cur |= y << 16;
 			break;
 		}
 		break;

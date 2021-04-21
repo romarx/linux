@@ -332,7 +332,8 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 	if (vc->vc_mode != KD_TEXT) {
 		return;
 	}
-
+	
+	u8 end = 2 * GCON_FONTW - 1;
 	u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
 	switch (mode) {
 	case CM_ERASE:
@@ -341,7 +342,45 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 		break;
 	case CM_MOVE:
 	case CM_DRAW:
+		switch(vc->vc_cursor_type & 0x0f){
+			int x, y;
+			case CUR_UNDERLINE:
+				gcon_getxy(vc, vc->vc_pos, &x, &y);
+				cur = gen_cursorparam_reg(x, y, 0, (end)/8, fontfac_param,
+				     1, GCON_BLINK_T);
+				break;
+			case CUR_TWO_THIRDS:
+				gcon_getxy(vc, vc->vc_pos, &x, &y);
+				cur = gen_cursorparam_reg(x, y, 0, (end) - (end / 3), fontfac_param,
+				     1, GCON_BLINK_T);
+				break;
+			case CUR_LOWER_THIRD:
+				gcon_getxy(vc, vc->vc_pos, &x, &y);
+				cur = gen_cursorparam_reg(x, y, 0, (end)/3, fontfac_param,
+				     1, GCON_BLINK_T);
+				break;
+			case CUR_LOWER_HALF:
+				gcon_getxy(vc, vc->vc_pos, &x, &y);
+				cur = gen_cursorparam_reg(x, y, 0, (end)/2, fontfac_param,
+				     1, GCON_BLINK_T);
+				break;
+			case CUR_NONE:
+				cur &= 0xffffdfff;
+				break;
+			default:
+				gcon_getxy(vc, vc->vc_pos, &x, &y);
+				cur |= 0x00002000;
+				cur &= 0x0000ffff;
+				cur |= x << 24;
+				cur |= y << 16;
+				break;
+		}
+		
+		
+		
+		
 		// for now only check for CUR_NONE
+		/*
 		if ((vc->vc_cursor_type & 0x0f) == CUR_NONE) {
 			//pr_info("Disable cursor CUR_NONE\n");
 			cur &= 0xffffdfff;
@@ -354,6 +393,7 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 			cur |= x << 24;
 			cur |= y << 16;
 		}
+		*/
 	}
 	write_ah(AH_CURSOR_PARAM_ADDR, cur);
 }

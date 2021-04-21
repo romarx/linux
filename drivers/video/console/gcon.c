@@ -337,7 +337,6 @@ static void gcon_cursor(struct vc_data *vc, int mode)
 	u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
 	switch (mode) {
 	case CM_ERASE:
-		//pr_info("Disable cursor\n");
 		cur &= 0xffffdfff; //disable cursor
 		break;
 	case CM_MOVE:

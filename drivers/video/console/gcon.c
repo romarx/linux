@@ -71,6 +71,8 @@ static u64 read_current_p_ah(void);
 static void write_text_p_ah(u64 p);
 static u32 gen_textparam_reg(u16 cols, u16 rows);
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, u8 enable, u8 blink_t);
+static void set_cursor_size(u32 *cur, u8 start, u8 end);
+static void set_enable_cursor(u32 *cur, u16 col, u16 row);
 
 /* --------------------------------
    Debug Functions
@@ -222,7 +224,7 @@ static int gcon_set_origin(struct vc_data *vc) {
 		vc->vc_origin = (unsigned long)text_buf;
 		tp_phys_actual = virt_to_phys(text_buf);
 		//pr_info("physical address of text_buffer: %lx\n", tp_phys_actual);
-	}else{
+	} else {
 		pr_alert("No text buffer set");
 		return -ENOMEM;
 	}
@@ -324,30 +326,31 @@ static void gcon_cursor(struct vc_data *vc, int mode) {
 			int x, y;
 		case CUR_UNDERLINE:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, vc->vc_font.height - (vc->vc_font.height < 10 ? 2 : 3),
-						  vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2), font_factor, 1, GCON_BLINK_T);
+			set_cursor_size(&cur, (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 2 : 3)),
+					(u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
+			set_enable_cursor(&cur, x, y);
 			break;
 		case CUR_TWO_THIRDS:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, vc->vc_font.height / 3, vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2), font_factor,
-						  1, GCON_BLINK_T);
+			set_cursor_size(&cur, (u8)(vc->vc_font.height / 3), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
+			set_enable_cursor(&cur, x, y);
 			break;
 		case CUR_LOWER_THIRD:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, (vc->vc_font.height * 2) / 3, vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2),
-						  font_factor, 1, GCON_BLINK_T);
+			set_cursor_size(&cur, (u8)((vc->vc_font.height * 2) / 3), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
+			set_enable_cursor(&cur, x, y);
 			break;
 		case CUR_LOWER_HALF:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, vc->vc_font.height / 2, vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2), font_factor,
-						  1, GCON_BLINK_T);
-			break;
+			set_cursor_size(&cur, (u8)(vc->vc_font.height / 2), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
+			set_enable_cursor(&cur, x, y);
 		case CUR_NONE:
 			cur &= 0xffffdfff;
 			break;
 		default:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, 1, vc->vc_font.height, font_factor, 1, GCON_BLINK_T);
+			set_cursor_size(&cur, 1, (u8)vc->vc_font.height);
+			set_enable_cursor(&cur, x, y);
 			break;
 		}
 		break;
@@ -440,6 +443,19 @@ static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, 
 	curs_reg |= (blink_t << 5);
 	curs_reg |= ((end - 1) << 0);
 	return curs_reg;
+}
+
+static void set_cursor_size(u32 *cur, u8 start, u8 end) {
+	*cur &= 0xffffe0e0;
+	*cur |= ((start - 1) << 8);
+	*cur |= ((end - 1) << 0);
+}
+
+static void set_enable_cursor(u32 *cur, int col, int row) {
+	*cur |= 0x00002000;
+	*cur &= 0x0000ffff;
+	*cur |= col << 24;
+	*cur |= row << 16;
 }
 
 /* --------------------------------

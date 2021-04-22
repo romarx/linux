@@ -15,7 +15,6 @@
 #include <linux/ioport.h>
 #include <asm/io.h>
 #include <linux/slab.h>
-//#include <linux/dma-mapping.h>
 
 #define BLANK 0x0020
 #define AH_BASE 0x19000000
@@ -73,6 +72,15 @@ static void write_text_p_ah(u64 p);
 static u32 gen_textparam_reg(u16 cols, u16 rows);
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, u8 enable, u8 blink_t);
 
+/* --------------------------------
+   Debug Functions
+   -------------------------------- */
+static void printregs(void);
+
+/* --------------------------------
+   Console Functions
+   -------------------------------- */
+
 static void gcon_putc(struct vc_data *vc, int c, int ypos, int xpos) {
 }
 
@@ -122,7 +130,7 @@ static const char *gcon_startup(void) {
 		mapped_base = NULL;
 		return NULL;
 	}
-	//pr_info("ioremap worked, mapped base: %pK\n", mapped_base);
+	//pr_info("ioremap worked, mapped base: %p\n", mapped_base);
 
 	max_fontfac_w = GCON_VIDEO_COLS / (GCON_TEXT_COLS * GCON_FONTW);
 	max_fontfac_h = GCON_VIDEO_LINES / (GCON_TEXT_ROWS * 2 * GCON_FONTW);
@@ -166,7 +174,7 @@ static const char *gcon_startup(void) {
 	write_ah(AH_HVTOT_REG_ADDR, (GCON_HTOT << 16) + GCON_VTOT);
 	write_ah(AH_HVFRONT_REG_ADDR, (GCON_HFRONT << 16) + GCON_VFRONT);
 
-	//set polarity right??
+	//set vsync, hsync and polarity
 	u32 hvsync = (GCON_HSYNC << 16) + GCON_VSYNC;
 	hvsync |= 0x80008000;
 	write_ah(AH_HVSYNC_REG_ADDR, hvsync);
@@ -175,7 +183,7 @@ static const char *gcon_startup(void) {
 	gcon_init_done = 1;
 
 	//pr_info("gcon startup done\n");
-	return "AXI_HDMI Text Mode Console";
+	return display_desc;
 }
 
 static void gcon_init(struct vc_data *vc, int init) {
@@ -214,6 +222,9 @@ static int gcon_set_origin(struct vc_data *vc) {
 		vc->vc_origin = (unsigned long)text_buf;
 		tp_phys_actual = virt_to_phys(text_buf);
 		//pr_info("physical address of text_buffer: %lx\n", tp_phys_actual);
+	}else{
+		pr_alert("No text buffer set");
+		return -ENOMEM;
 	}
 
 	if (!tp_phys_actual) {
@@ -228,29 +239,7 @@ static int gcon_set_origin(struct vc_data *vc) {
 	if (!(pwr & 0x1)) {
 		write_ah(AH_PWR_REG_ADDR, 1);
 	}
-
-	/* this prints every register from PAPER for debugging
-	u64 base = read_ah64(AH_PNTRQ_ADDR);
-	u64 hvtot = read_ah64(AH_HVTOT_REG_ADDR);
-	u64 hvact = read_ah64(AH_HVACT_REG_ADDR);
-	u64 hvfront = read_ah64(AH_HVFRONT_REG_ADDR);
-	u64 hvsync = read_ah64(AH_HVSYNC_REG_ADDR);
-	u64 pwrreg = read_ah64(AH_PWR_REG_ADDR);	
-	curr_p = read_ah64(AH_CURR_PNTR_ADDR);
-	u64 hdmitxt = read_ah64(AH_TEXT_PARAM_ADDR);
-	u64 cursprm =  read_ah64(AH_CURSOR_PARAM_ADDR);
-
-	pr_info("BASE: %llx\n", base);
-	pr_info("HVTOT: %llx\n", hvtot);
-	pr_info("HVACT: %llx\n", hvact);
-	pr_info("HVFRONT: %llx\n", hvfront);
-	pr_info("HVSYNC: %llx\n", hvsync);
-	pr_info("PWRREG: %llx\n", pwrreg);
-	pr_info("CURR_PTR: %llx\n", curr_p);
-	pr_info("HDMITXT: %llx\n", hdmitxt);
-	pr_info("CURSPRM: %llx\n", cursprm);
-	*/
-
+	//printregs();
 	return 1;
 }
 
@@ -453,6 +442,23 @@ static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, 
 	return curs_reg;
 }
 
+/* --------------------------------
+   Debug Functions
+   -------------------------------- */
+
+static void printregs(void) {
+	// this prints every 64 bit register from PAPER
+	pr_info("BASEPT:\t%llx\n", read_ah64(AH_PNTRQ_ADDR));
+	pr_info("HVTOTL:\t%llx\n", read_ah64(AH_HVTOT_REG_ADDR));
+	pr_info("HVACTI:\t%llx\n", read_ah64(AH_HVACT_REG_ADDR));
+	pr_info("HVFRNT:\t%llx\n", read_ah64(AH_HVFRONT_REG_ADDR));
+	pr_info("HVSYNC:\t%llx\n", read_ah64(AH_HVSYNC_REG_ADDR));
+	pr_info("PWRREG:\t%llx\n", read_ah64(AH_PWR_REG_ADDR));
+	pr_info("CURPTR:\t%llx\n", read_ah64(AH_CURR_PNTR_ADDR));
+	pr_info("TXTPRM:\t%llx\n", read_ah64(AH_TEXT_PARAM_ADDR));
+	pr_info("CURPRM:\t%llx\n", read_ah64(AH_CURSOR_PARAM_ADDR));
+}
+
 const struct consw gcon = {
 	.owner = THIS_MODULE,
 	.con_startup = gcon_startup,
@@ -468,7 +474,6 @@ const struct consw gcon = {
 	.con_font_set = gcon_font_set,
 	.con_font_default = gcon_font_default,
 	.con_font_copy = gcon_font_copy,
-
 	.con_set_origin = gcon_set_origin,
 	.con_build_attr = gcon_build_attr,
 	.con_getxy = gcon_getxy,

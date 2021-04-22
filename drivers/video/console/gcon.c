@@ -104,7 +104,7 @@ static int gcon_blank(struct vc_data *vc, int blank, int mode_switch) {
 }
 
 static const char *gcon_startup(void) {
-	pr_info("Entered gcon_startup\n");
+	//pr_info("Entered gcon_startup\n");
 	const char *display_desc = "AXI_HDMI Text Mode Console";
 	u8 max_fontfac_w, max_fontfac_h, max_fontfac;
 	u8 fontfac_param;
@@ -117,7 +117,7 @@ static const char *gcon_startup(void) {
 		printk(KERN_ALERT "Failed to reserve A2H IO Address Space!\n");
 		return NULL;
 	}
-	pr_info("requesting memory region succeeded!\n");
+	//pr_info("requesting memory region succeeded!\n");
 
 	// get a base for memory mapped IO, size of PAPER's IO is 4kb
 	if (!(mapped_base = ioremap((resource_size_t)AH_BASE, 4096))) {
@@ -125,7 +125,7 @@ static const char *gcon_startup(void) {
 		mapped_base = NULL;
 		return NULL;
 	}
-	pr_info("ioremap worked, mapped base: %pK\n", mapped_base);
+	//pr_info("ioremap worked, mapped base: %pK\n", mapped_base);
 
 	max_fontfac_w = GCON_VIDEO_COLS / (GCON_TEXT_COLS * GCON_FONTW);
 	max_fontfac_h = GCON_VIDEO_LINES / (GCON_TEXT_ROWS * 2 * GCON_FONTW);
@@ -170,13 +170,13 @@ static const char *gcon_startup(void) {
 		pr_info("Failed to allocate blank buffer memory with kzalloc.\n");
 		return NULL;
 	}
-	pr_info("kzalloc worked for blank buf\n");
+	//pr_info("kzalloc worked for blank buf\n");
 
 	if (!(text_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_USER))) {
 		pr_info("Failed to allocate text buffer memory with kzalloc.\n");
 		return NULL;
 	}
-	pr_info("kzalloc worked for text buf\n");
+	//pr_info("kzalloc worked for text buf\n");
 
 	// on startup, power off AXI_HDMI
 	write_ah(AH_PWR_REG_ADDR, 0);
@@ -196,12 +196,12 @@ static const char *gcon_startup(void) {
 	font_factor = fontfac_param;
 	gcon_init_done = 1;
 
-	pr_info("gcon startup done\n");
+	//pr_info("gcon startup done\n");
 	return "AXI_HDMI Text Mode Console";
 }
 
 static void gcon_init(struct vc_data *vc, int init) {
-	pr_info("Entered gcon_init\n");
+	//pr_info("Entered gcon_init\n");
 	vc->vc_can_do_color = 1;
 	if (init) {
 		vc->vc_cols = GCON_TEXT_COLS;
@@ -215,11 +215,11 @@ static void gcon_init(struct vc_data *vc, int init) {
 	vc->vc_complement_mask = 0x7700;
 	vc->vc_hi_font_mask = 0;
 
-	pr_info("Finish gcon_init\n");
+	//pr_info("Finish gcon_init\n");
 }
 
 static int gcon_set_origin(struct vc_data *vc) {
-	pr_info("Entered gcon_set_origin\n");
+	//pr_info("Entered gcon_set_origin\n");
 
 	u64 curr_p;
 	u32 pwr;
@@ -227,15 +227,15 @@ static int gcon_set_origin(struct vc_data *vc) {
 
 	curr_p = read_current_p_ah();
 	pwr = read_ah(AH_PWR_REG_ADDR);
-	pr_info("Current pointer: %llx\n", curr_p);
+	//pr_info("Current pointer: %llx\n", curr_p);
 
 	if (text_buf) {
-		pr_info("Attempt setting pointer to origin\n");
+		//pr_info("Attempt setting pointer to origin\n");
 		vc->vc_screenbuf = text_buf;
 		vc->vc_screenbuf_size = GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16);
 		vc->vc_origin = (unsigned long)text_buf;
 		tp_phys_actual = virt_to_phys(text_buf);
-		pr_info("Physical address: %lx\n", tp_phys_actual);
+		//pr_info("physical address of text_buffer: %lx\n", tp_phys_actual);
 	}
 
 	if (!tp_phys_actual) {
@@ -251,6 +251,7 @@ static int gcon_set_origin(struct vc_data *vc) {
 		write_ah(AH_PWR_REG_ADDR, 1);
 	}
 
+	/* this prints every register from PAPER for debugging
 	u64 base = read_ah64(AH_PNTRQ_ADDR);
 	u64 hvtot = read_ah64(AH_HVTOT_REG_ADDR);
 	u64 hvact = read_ah64(AH_HVACT_REG_ADDR);
@@ -270,7 +271,7 @@ static int gcon_set_origin(struct vc_data *vc) {
 	pr_info("CURR_PTR: %llx\n", curr_p);
 	pr_info("HDMITXT: %llx\n", hdmitxt);
 	pr_info("CURSPRM: %llx\n", cursprm);
-	
+	*/	
 
 	return 1;
 }

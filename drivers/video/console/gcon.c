@@ -60,9 +60,6 @@ static int font_factor;
 static unsigned short *blank_buf = NULL;
 static unsigned short *text_buf = NULL;
 
-//these are used with the dma engine, see set_origin
-//static dma_addr_t blank_buf_phys = 0, text_buf_phys = 0;
-
 /* --------------------------------
    Internal Functions
    -------------------------------- */
@@ -146,25 +143,6 @@ static const char *gcon_startup(void) {
 		break;
 	}
 
-	/* this breaks everything
-	//attempt to allocate memory with the dma engine
-	if (!(blank_buf = (u16 *)dma_alloc_coherent(NULL, GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), &blank_buf_phys, GFP_KERNEL))) {
-    	pr_info("Failed to allocate buffer of no color!\n");
-    	blank_buf_phys = 0;
-		return NULL;
-
-	}
-	pr_info("dma_alloc_coherent worked for blank buf\n");
-
-	
-	if (!(text_buf = (u16 *)dma_alloc_coherent(NULL, GCON_TEXT_COLS*GCON_TEXT_ROWS*sizeof(u16), &text_buf_phys, GFP_KERNEL))) {
-    	pr_info("Failed to allocate buffer of text!\n");
-		text_buf_phys = 0;
-		return NULL;
-  	}
-	pr_info("dma_alloc_coherent worked for text buf\n");
-	*/
-
 	// Using kzalloc instead of the dma engine to allocate memory for the buffers
 	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_USER))) {
 		pr_info("Failed to allocate blank buffer memory with kzalloc.\n");
@@ -182,12 +160,12 @@ static const char *gcon_startup(void) {
 	write_ah(AH_PWR_REG_ADDR, 0);
 	write_ah(AH_TEXT_PARAM_ADDR, gen_textparam_reg(GCON_TEXT_COLS, GCON_TEXT_ROWS));
 	// cursor off by default
-	write_ah(AH_CURSOR_PARAM_ADDR, gen_cursorparam_reg(0, 0, 0, 2 * GCON_FONTW - 1, fontfac_param, 0, GCON_BLINK_T));
+	write_ah(AH_CURSOR_PARAM_ADDR, gen_cursorparam_reg(0, 0, 1, 2 * GCON_FONTW, fontfac_param, 0, GCON_BLINK_T));
 	//set timings
 	write_ah(AH_HVACT_REG_ADDR, (GCON_VIDEO_COLS << 16) + GCON_VIDEO_LINES);
 	write_ah(AH_HVTOT_REG_ADDR, (GCON_HTOT << 16) + GCON_VTOT);
 	write_ah(AH_HVFRONT_REG_ADDR, (GCON_HFRONT << 16) + GCON_VFRONT);
-	
+
 	//set polarity right??
 	u32 hvsync = (GCON_HSYNC << 16) + GCON_VSYNC;
 	hvsync |= 0x80008000;
@@ -271,7 +249,7 @@ static int gcon_set_origin(struct vc_data *vc) {
 	pr_info("CURR_PTR: %llx\n", curr_p);
 	pr_info("HDMITXT: %llx\n", hdmitxt);
 	pr_info("CURSPRM: %llx\n", cursprm);
-	*/	
+	*/
 
 	return 1;
 }
@@ -357,27 +335,30 @@ static void gcon_cursor(struct vc_data *vc, int mode) {
 			int x, y;
 		case CUR_UNDERLINE:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, end - 1, end, font_factor, 1, GCON_BLINK_T);
+			cur = gen_cursorparam_reg(x, y, vc->vc_font.height - (vc->vc_font.height < 10 ? 2 : 3),
+						  vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2), font_factor, 1, GCON_BLINK_T);
 			break;
 		case CUR_TWO_THIRDS:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, (end / 3), end, font_factor, 1, GCON_BLINK_T);
+			cur = gen_cursorparam_reg(x, y, vc->vc_font.height / 3, vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2), font_factor,
+						  1, GCON_BLINK_T);
 			break;
 		case CUR_LOWER_THIRD:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, ((end * 2) / 3), end, font_factor, 1, GCON_BLINK_T);
+			cur = gen_cursorparam_reg(x, y, (vc->vc_font.height * 2) / 3, vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2),
+						  font_factor, 1, GCON_BLINK_T);
 			break;
 		case CUR_LOWER_HALF:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			cur = gen_cursorparam_reg(x, y, (end / 2 + 1), end, font_factor, 1, GCON_BLINK_T);
+			cur = gen_cursorparam_reg(x, y, vc->vc_font.height / 2, vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2), font_factor,
+						  1, GCON_BLINK_T);
 			break;
 		case CUR_NONE:
 			cur &= 0xffffdfff;
 			break;
 		default:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-
-			cur = gen_cursorparam_reg(x, y, 0, end, font_factor, 1, GCON_BLINK_T);
+			cur = gen_cursorparam_reg(x, y, 1, vc->vc_font.height, font_factor, 1, GCON_BLINK_T);
 			break;
 		}
 		break;
@@ -460,14 +441,15 @@ static u32 gen_textparam_reg(u16 cols, u16 rows) {
 }
 
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, u8 enable, u8 blink_t) {
+	//start and end - 1 to mimic behaviour of vgacon function for cursor
 	u32 curs_reg = 0;
 	curs_reg |= (col << 24);
 	curs_reg |= (row << 16);
 	curs_reg |= (font_fac << 14);
 	curs_reg |= (enable << 13);
-	curs_reg |= (start << 8);
+	curs_reg |= ((start - 1) << 8);
 	curs_reg |= (blink_t << 5);
-	curs_reg |= (end << 0);
+	curs_reg |= ((end - 1) << 0);
 	return curs_reg;
 }
 

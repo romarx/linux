@@ -439,7 +439,7 @@ static u32 gen_textparam_reg(u16 cols, u16 rows) {
 }
 
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, u8 enable, u8 blink_t) {
-	//start and end - 1 to mimic behaviour of vgacon function for cursor
+	//start and end - 1 to mimic behavior of vgacon function for cursor
 	u32 curs_reg = 0;
 	curs_reg |= (col << 24);
 	curs_reg |= (row << 16);
@@ -452,7 +452,7 @@ static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, 
 }
 
 static void set_cursor_size(u32 *cur, u8 start, u8 end) {
-	//start and end - 1 to mimic behaviour of vgacon function for cursor
+	//start and end - 1 to mimic behavior of vgacon function for cursor
 	*cur &= 0xffffe0e0;
 	*cur |= ((start - 1) << 8);
 	*cur |= ((end - 1) << 0);

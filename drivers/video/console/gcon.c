@@ -187,7 +187,11 @@ static const char *gcon_startup(void) {
 	write_ah(AH_HVACT_REG_ADDR, (GCON_VIDEO_COLS << 16) + GCON_VIDEO_LINES);
 	write_ah(AH_HVTOT_REG_ADDR, (GCON_HTOT << 16) + GCON_VTOT);
 	write_ah(AH_HVFRONT_REG_ADDR, (GCON_HFRONT << 16) + GCON_VFRONT);
-	write_ah(AH_HVSYNC_REG_ADDR, (GCON_HSYNC << 16) + GCON_VSYNC);
+	
+	//set polarity right??
+	u32 hvsync = (GCON_HSYNC << 16) + GCON_VSYNC
+	hvsync |= 0x80008000;
+	write_ah(AH_HVSYNC_REG_ADDR, hvsync);
 
 	font_factor = fontfac_param;
 	gcon_init_done = 1;

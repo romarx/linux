@@ -189,7 +189,7 @@ static const char *gcon_startup(void) {
 	write_ah(AH_HVFRONT_REG_ADDR, (GCON_HFRONT << 16) + GCON_VFRONT);
 	
 	//set polarity right??
-	u32 hvsync = (GCON_HSYNC << 16) + GCON_VSYNC
+	u32 hvsync = (GCON_HSYNC << 16) + GCON_VSYNC;
 	hvsync |= 0x80008000;
 	write_ah(AH_HVSYNC_REG_ADDR, hvsync);
 

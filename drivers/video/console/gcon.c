@@ -420,8 +420,6 @@ static u64 read_ah64(int offset) {
 
 /* 
 keeps power status reg as-is 
-
-original has a dma_addr_t instead of u64 probably need to do something in HW)
 */
 static void write_text_p_ah(u64 p) {
 	u32 pwr = read_ah(AH_PWR_REG_ADDR);

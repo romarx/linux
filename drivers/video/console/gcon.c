@@ -217,7 +217,7 @@ static void gcon_init(struct vc_data *vc, int init) {
 static int gcon_set_origin(struct vc_data *vc) {
 	pr_info("Entered gcon_set_origin\n");
 
-	u64 curr_p, curr_p_after;
+	u64 curr_p;
 	u32 pwr;
 	unsigned long tp_phys_actual = 0;
 
@@ -247,8 +247,26 @@ static int gcon_set_origin(struct vc_data *vc) {
 		write_ah(AH_PWR_REG_ADDR, 1);
 	}
 
-	curr_p_after = read_current_p_ah();
-	pr_info("Current pointer after setting: %llx\n", curr_p_after);
+	u64 base = read_ah64(AH_PNTRQ_ADDR);
+	u64 hvtot = read_ah64(AH_HVTOT_REG_ADDR);
+	u64 hvact = read_ah64(AH_HVACT_REG_ADDR);
+	u64 hvfront = read_ah64(AH_HVFRONT_REG_ADDR);
+	u64 hvsync = read_ah64(AH_HVSYNC_REG_ADDR);
+	u64 pwrreg = read_ah64(AH_PWR_REG_ADDR);	
+	curr_p = read_ah64(AH_CURR_PNTR_ADDR);
+	u64 hdmitxt = read_ah64(AH_TEXT_PARAM_ADDR);
+	u64 cursprm =  read_ah64(AH_CURSOR_PARAM_ADDR);
+
+	pr_info("BASE: %llx\n", base);
+	pr_info("HVTOT: %llx\n", hvtot);
+	pr_info("HVACT: %llx\n", hvact);
+	pr_info("HVFRONT: %llx\n", hvfront);
+	pr_info("HVSYNC: %llx\n", hvsync);
+	pr_info("PWRREG: %llx\n", pwrreg);
+	pr_info("CURR_PTR: %llx\n", curr_p);
+	pr_info("HDMITXT: %llx\n", hdmitxt);
+	pr_info("CURSPRM: %llx\n", cursprm);
+	
 
 	return 1;
 }

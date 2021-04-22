@@ -72,7 +72,7 @@ static void write_text_p_ah(u64 p);
 static u32 gen_textparam_reg(u16 cols, u16 rows);
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, u8 enable, u8 blink_t);
 static void set_cursor_size(u32 *cur, u8 start, u8 end);
-static void set_enable_cursor(u32 *cur, u16 col, u16 row);
+static void set_xy_cursor(u32 *cur, u16 col, u16 row);
 
 /* --------------------------------
    Debug Functions
@@ -328,29 +328,35 @@ static void gcon_cursor(struct vc_data *vc, int mode) {
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
 			set_cursor_size(&cur, (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 2 : 3)),
 					(u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
-			set_enable_cursor(&cur, x, y);
+			set_xy_cursor(&cur, x, y);
+			cur |= 0x00002000;
 			break;
 		case CUR_TWO_THIRDS:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
 			set_cursor_size(&cur, (u8)(vc->vc_font.height / 3), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
-			set_enable_cursor(&cur, x, y);
+			set_xy_cursor(&cur, x, y);
+			cur |= 0x00002000;
 			break;
 		case CUR_LOWER_THIRD:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
 			set_cursor_size(&cur, (u8)((vc->vc_font.height * 2) / 3), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
-			set_enable_cursor(&cur, x, y);
+			set_xy_cursor(&cur, x, y);
+			cur |= 0x00002000;
 			break;
 		case CUR_LOWER_HALF:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
 			set_cursor_size(&cur, (u8)(vc->vc_font.height / 2), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
-			set_enable_cursor(&cur, x, y);
+			set_xy_cursor(&cur, x, y);
+			cur |= 0x00002000;
+			break;
 		case CUR_NONE:
 			cur &= 0xffffdfff;
 			break;
 		default:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
 			set_cursor_size(&cur, 1, (u8)vc->vc_font.height);
-			set_enable_cursor(&cur, x, y);
+			set_xy_cursor(&cur, x, y);
+			cur |= 0x00002000;
 			break;
 		}
 		break;
@@ -446,13 +452,13 @@ static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, 
 }
 
 static void set_cursor_size(u32 *cur, u8 start, u8 end) {
+	//start and end - 1 to mimic behaviour of vgacon function for cursor
 	*cur &= 0xffffe0e0;
 	*cur |= ((start - 1) << 8);
 	*cur |= ((end - 1) << 0);
 }
 
-static void set_enable_cursor(u32 *cur, int col, int row) {
-	*cur |= 0x00002000;
+static void set_xy_cursor(u32 *cur, int col, int row) {
 	*cur &= 0x0000ffff;
 	*cur |= col << 24;
 	*cur |= row << 16;

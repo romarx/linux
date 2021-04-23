@@ -73,7 +73,7 @@ static void write_text_p_ah(u64 p);
 static u32 gen_textparam_reg(u16 cols, u16 rows);
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, u8 enable, u8 blink_t);
 static void set_cursor_size(u32 *cur, u8 start, u8 end);
-static void set_xy_cursor(u32 *cur, u16 col, u16 row);
+static void set_xy_cursor(u32 *cur, int col, int row);
 
 /* --------------------------------
    Debug Functions

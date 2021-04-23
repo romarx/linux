@@ -18,6 +18,7 @@
 
 #define BLANK 0x0020
 #define AH_BASE 0x19000000
+
 /*
   Offsets relative to AH_BASE
 */
@@ -437,7 +438,7 @@ static u32 gen_textparam_reg(u16 cols, u16 rows) {
 }
 
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, u8 enable, u8 blink_t) {
-	//start and end - 1 to mimic behavior of vgacon function for cursor
+	//start and end - 1 to mimic behavior of vgacon function for cursor size
 	u32 curs_reg = 0;
 	curs_reg |= (col << 24);
 	curs_reg |= (row << 16);
@@ -450,7 +451,7 @@ static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, 
 }
 
 static void set_cursor_size(u32 *cur, u8 start, u8 end) {
-	//start and end - 1 to mimic behavior of vgacon function for cursor
+	//start and end - 1 to mimic behavior of vgacon function for cursor size
 	*cur &= 0xffffe0e0;
 	*cur |= ((start - 1) << 8);
 	*cur |= ((end - 1) << 0);
@@ -468,15 +469,15 @@ static void set_xy_cursor(u32 *cur, int col, int row) {
 
 static void printregs(void) {
 	// this prints every 64 bit register from PAPER
-	pr_info("BASEPT:\t%llx\n", read_ah64(AH_PNTRQ_ADDR));
-	pr_info("HVTOTL:\t%llx\n", read_ah64(AH_HVTOT_REG_ADDR));
-	pr_info("HVACTI:\t%llx\n", read_ah64(AH_HVACT_REG_ADDR));
-	pr_info("HVFRNT:\t%llx\n", read_ah64(AH_HVFRONT_REG_ADDR));
-	pr_info("HVSYNC:\t%llx\n", read_ah64(AH_HVSYNC_REG_ADDR));
-	pr_info("PWRREG:\t%llx\n", read_ah64(AH_PWR_REG_ADDR));
-	pr_info("CURPTR:\t%llx\n", read_ah64(AH_CURR_PNTR_ADDR));
-	pr_info("TXTPRM:\t%llx\n", read_ah64(AH_TEXT_PARAM_ADDR));
-	pr_info("CURPRM:\t%llx\n", read_ah64(AH_CURSOR_PARAM_ADDR));
+	pr_info("BASEPT:\t0x%llx\n", read_ah64(AH_PNTRQ_ADDR));
+	pr_info("HVTOTL:\t0x%llx\n", read_ah64(AH_HVTOT_REG_ADDR));
+	pr_info("HVACTI:\t0x%llx\n", read_ah64(AH_HVACT_REG_ADDR));
+	pr_info("HVFRNT:\t0x%llx\n", read_ah64(AH_HVFRONT_REG_ADDR));
+	pr_info("HVSYNC:\t0x%llx\n", read_ah64(AH_HVSYNC_REG_ADDR));
+	pr_info("PWRREG:\t0x%llx\n", read_ah64(AH_PWR_REG_ADDR));
+	pr_info("CURPTR:\t0x%llx\n", read_ah64(AH_CURR_PNTR_ADDR));
+	pr_info("TXTPRM:\t0x%llx\n", read_ah64(AH_TEXT_PARAM_ADDR));
+	pr_info("CURPRM:\t0x%llx\n", read_ah64(AH_CURSOR_PARAM_ADDR));
 }
 
 const struct consw gcon = {

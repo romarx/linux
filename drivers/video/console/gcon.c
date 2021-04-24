@@ -152,12 +152,12 @@ static const char *gcon_startup(void) {
 
 	// allocate memory for the buffers
 	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_USER))) {
-		pr_info("Failed to allocate blank buffer memory with kzalloc.\n");
+		pr_alert("Failed to allocate blank buffer memory with kzalloc.\n");
 		return NULL;
 	}
 
 	if (!(text_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_USER))) {
-		pr_info("Failed to allocate text buffer memory with kzalloc.\n");
+		pr_alert("Failed to allocate text buffer memory with kzalloc.\n");
 		return NULL;
 	}
 
@@ -177,12 +177,11 @@ static const char *gcon_startup(void) {
 
 	gcon_init_done = 1;
 
-	//pr_info("gcon startup done\n");
 	return display_desc;
 }
 
 static void gcon_init(struct vc_data *vc, int init) {
-	//pr_info("Entered gcon_init\n");
+
 	vc->vc_can_do_color = 1;
 	if (init) {
 		vc->vc_cols = GCON_TEXT_COLS;
@@ -195,12 +194,9 @@ static void gcon_init(struct vc_data *vc, int init) {
 	vc->vc_font.height = 2 * GCON_FONTW;
 	vc->vc_complement_mask = 0x7700;
 	vc->vc_hi_font_mask = 0;
-
-	//pr_info("Finish gcon_init\n");
 }
 
 static int gcon_set_origin(struct vc_data *vc) {
-	//pr_info("Entered gcon_set_origin\n");
 
 	u64 curr_p;
 	u32 pwr;
@@ -208,15 +204,13 @@ static int gcon_set_origin(struct vc_data *vc) {
 
 	curr_p = read_current_p_ah();
 	pwr = read_ah(AH_PWR_REG_ADDR);
-	//pr_info("Current pointer: %llx\n", curr_p);
 
+	// set start of text buffer for virtual console
 	if (text_buf) {
-		//pr_info("Attempt setting pointer to origin\n");
 		vc->vc_screenbuf = text_buf;
 		vc->vc_screenbuf_size = GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16);
 		vc->vc_origin = (unsigned long)text_buf;
 		tp_phys_actual = virt_to_phys(text_buf);
-		//pr_info("physical address of text_buffer: %lx\n", tp_phys_actual);
 	} else {
 		pr_alert("No text buffer set");
 		return -ENOMEM;
@@ -227,10 +221,11 @@ static int gcon_set_origin(struct vc_data *vc) {
 		return -ENOMEM;
 	}
 
-	// give pointer for text_buffer to AH_BASE
+	// give pointer for text_buffer to PAPER if it changed
 	if (curr_p != tp_phys_actual) {
 		write_text_p_ah((u64)tp_phys_actual);
 	}
+	// power on AXI_HDMI
 	if (!(pwr & 0x1)) {
 		write_ah(AH_PWR_REG_ADDR, 1);
 	}
@@ -239,7 +234,6 @@ static int gcon_set_origin(struct vc_data *vc) {
 }
 
 static u8 gcon_build_attr(struct vc_data *vc, u8 color, u8 intensity, u8 blink, u8 underline, u8 reverse, u8 italic) {
-	//pr_info("Entered gcon_build_attr!\n");
 	u8 attr;
 	attr = color;
 	if (italic) {
@@ -263,7 +257,6 @@ static u8 gcon_build_attr(struct vc_data *vc, u8 color, u8 intensity, u8 blink, 
 }
 
 static void gcon_deinit(struct vc_data *vc) {
-	pr_info("Enter gcon_deinit\n");
 	write_ah(AH_PWR_REG_ADDR, 0);
 	iounmap(mapped_base);
 	release_mem_region(AH_BASE, 4096);

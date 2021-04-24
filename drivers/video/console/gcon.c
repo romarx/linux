@@ -1,8 +1,5 @@
 /*
- *  linux/drivers/video/gcon.c -- A dummy console driver
- *
- *  To be used if there's no other console driver (e.g. for plain VGA text)
- *  available, usually until fbcon takes console over.
+ *  linux/drivers/video/gcon.c --  AXI HDMI Text Mode Console driver
  */
 
 #include <linux/types.h>
@@ -35,7 +32,7 @@
 #define AH_BG_COLOR_START_ADDR 0x800
 
 /*
-  hardcode video format like a bad boy (SVGA60)
+  hardcode video format (SVGA60)
 */
 #define GCON_VIDEO_LINES 600
 #define GCON_VIDEO_COLS 800
@@ -52,10 +49,11 @@
 #define GCON_TEXT_ROWS 37
 #define GCON_TEXT_COLS 100
 
-static bool gcon_init_done = 0;
-static void *mapped_base = NULL;
+static int fontfac_param = 0;
 
-static int font_factor;
+static bool gcon_init_done = 0;
+
+static void *mapped_base = NULL;
 
 static unsigned short *blank_buf = NULL;
 static unsigned short *text_buf = NULL;
@@ -92,11 +90,10 @@ static void gcon_putcs(struct vc_data *vc, const unsigned short *s, int count, i
 }
 
 static int gcon_blank(struct vc_data *vc, int blank, int mode_switch) {
-	pr_info("Entered gcon_blank!\n");
 	switch (blank) {
 	case 0: /*unblank*/
 		if (text_buf) {
-			write_text_p_ah((u64)virt_to_phys((volatile void *)vc->vc_origin)); //is this okay?
+			write_text_p_ah((u64)virt_to_phys((volatile void *)vc->vc_origin));
 		}
 		return 1;
 	case 1:
@@ -114,9 +111,9 @@ static int gcon_blank(struct vc_data *vc, int blank, int mode_switch) {
 
 static const char *gcon_startup(void) {
 	const char *display_desc = "AXI_HDMI Text Mode Console";
-	u32 hvsync;
+
 	u8 max_fontfac_w, max_fontfac_h, max_fontfac;
-	u8 fontfac_param;
+
 	if (gcon_init_done) {
 		return display_desc;
 	}
@@ -126,7 +123,6 @@ static const char *gcon_startup(void) {
 		printk(KERN_ALERT "Failed to reserve A2H IO Address Space!\n");
 		return NULL;
 	}
-	//pr_info("requesting memory region succeeded!\n");
 
 	// get a base for memory mapped IO, size of PAPER's IO is 4kb
 	if (!(mapped_base = ioremap((resource_size_t)AH_BASE, 4096))) {
@@ -134,7 +130,6 @@ static const char *gcon_startup(void) {
 		mapped_base = NULL;
 		return NULL;
 	}
-	//pr_info("ioremap worked, mapped base: %p\n", mapped_base);
 
 	max_fontfac_w = GCON_VIDEO_COLS / (GCON_TEXT_COLS * GCON_FONTW);
 	max_fontfac_h = GCON_VIDEO_LINES / (GCON_TEXT_ROWS * 2 * GCON_FONTW);
@@ -155,35 +150,31 @@ static const char *gcon_startup(void) {
 		break;
 	}
 
-	// to allocate memory for the buffers
+	// allocate memory for the buffers
 	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_USER))) {
 		pr_info("Failed to allocate blank buffer memory with kzalloc.\n");
 		return NULL;
 	}
-	//pr_info("kzalloc worked for blank buf\n");
 
 	if (!(text_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_USER))) {
 		pr_info("Failed to allocate text buffer memory with kzalloc.\n");
 		return NULL;
 	}
-	//pr_info("kzalloc worked for text buf\n");
 
 	// on startup, power off AXI_HDMI
 	write_ah(AH_PWR_REG_ADDR, 0);
 	write_ah(AH_TEXT_PARAM_ADDR, gen_textparam_reg(GCON_TEXT_COLS, GCON_TEXT_ROWS));
 	// cursor off by default
 	write_ah(AH_CURSOR_PARAM_ADDR, gen_cursorparam_reg(0, 0, 0, 2 * GCON_FONTW - 1, fontfac_param, 0, GCON_BLINK_T));
+
 	//set timings
 	write_ah(AH_HVACT_REG_ADDR, (GCON_VIDEO_COLS << 16) + GCON_VIDEO_LINES);
 	write_ah(AH_HVTOT_REG_ADDR, (GCON_HTOT << 16) + GCON_VTOT);
 	write_ah(AH_HVFRONT_REG_ADDR, (GCON_HFRONT << 16) + GCON_VFRONT);
 
-	//set vsync, hsync and polarity
-	hvsync = (GCON_HSYNC << 16) + GCON_VSYNC;
-	hvsync |= 0x80008000;
-	write_ah(AH_HVSYNC_REG_ADDR, hvsync);
+	// set hsync, vsync and polarity
+	write_ah(AH_HVSYNC_REG_ADDR, ((GCON_HSYNC << 16) + GCON_VSYNC) | 0x80008000);
 
-	font_factor = fontfac_param;
 	gcon_init_done = 1;
 
 	//pr_info("gcon startup done\n");
@@ -327,27 +318,27 @@ static void gcon_cursor(struct vc_data *vc, int mode) {
 			int x, y;
 		case CUR_UNDERLINE:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
+			set_xy_cursor(&cur, x, y);
 			set_cursor_size(&cur, (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 2 : 3)),
 					(u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
-			set_xy_cursor(&cur, x, y);
-			cur |= 0x00002000;
+			cur |= 0x00002000; //enable cursor
 			break;
 		case CUR_TWO_THIRDS:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			set_cursor_size(&cur, (u8)(vc->vc_font.height / 3), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
 			set_xy_cursor(&cur, x, y);
+			set_cursor_size(&cur, (u8)(vc->vc_font.height / 3), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
 			cur |= 0x00002000;
 			break;
 		case CUR_LOWER_THIRD:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			set_cursor_size(&cur, (u8)((vc->vc_font.height * 2) / 3), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
 			set_xy_cursor(&cur, x, y);
+			set_cursor_size(&cur, (u8)((vc->vc_font.height * 2) / 3), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
 			cur |= 0x00002000;
 			break;
 		case CUR_LOWER_HALF:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			set_cursor_size(&cur, (u8)(vc->vc_font.height / 2), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
 			set_xy_cursor(&cur, x, y);
+			set_cursor_size(&cur, (u8)(vc->vc_font.height / 2), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
 			cur |= 0x00002000;
 			break;
 		case CUR_NONE:
@@ -355,8 +346,8 @@ static void gcon_cursor(struct vc_data *vc, int mode) {
 			break;
 		default:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
-			set_cursor_size(&cur, 1, (u8)vc->vc_font.height);
 			set_xy_cursor(&cur, x, y);
+			set_cursor_size(&cur, 1, (u8)vc->vc_font.height);
 			cur |= 0x00002000;
 			break;
 		}
@@ -370,7 +361,6 @@ static bool gcon_scroll(struct vc_data *vc, unsigned int top, unsigned int botto
 }
 
 static int gcon_switch(struct vc_data *vc) {
-	//pr_info("Entered gcon switch\n");
 	return 1;
 }
 

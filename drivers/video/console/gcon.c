@@ -77,8 +77,9 @@ static void set_xy_cursor(u32 *cur, int col, int row);
 
 /* --------------------------------
    Debug Functions
-   -------------------------------- */
+   -------------------------------- 
 static void printregs(void);
+*/
 
 /* --------------------------------
    Console Functions
@@ -112,8 +113,8 @@ static int gcon_blank(struct vc_data *vc, int blank, int mode_switch) {
 }
 
 static const char *gcon_startup(void) {
-	//pr_info("Entered gcon_startup\n");
 	const char *display_desc = "AXI_HDMI Text Mode Console";
+	u32 hvsync;
 	u8 max_fontfac_w, max_fontfac_h, max_fontfac;
 	u8 fontfac_param;
 	if (gcon_init_done) {
@@ -154,7 +155,7 @@ static const char *gcon_startup(void) {
 		break;
 	}
 
-	// Using kzalloc instead of the dma engine to allocate memory for the buffers
+	// to allocate memory for the buffers
 	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_USER))) {
 		pr_info("Failed to allocate blank buffer memory with kzalloc.\n");
 		return NULL;
@@ -171,14 +172,14 @@ static const char *gcon_startup(void) {
 	write_ah(AH_PWR_REG_ADDR, 0);
 	write_ah(AH_TEXT_PARAM_ADDR, gen_textparam_reg(GCON_TEXT_COLS, GCON_TEXT_ROWS));
 	// cursor off by default
-	write_ah(AH_CURSOR_PARAM_ADDR, gen_cursorparam_reg(0, 0, 1, 2 * GCON_FONTW, fontfac_param, 0, GCON_BLINK_T));
+	write_ah(AH_CURSOR_PARAM_ADDR, gen_cursorparam_reg(0, 0, 0, 2 * GCON_FONTW - 1, fontfac_param, 0, GCON_BLINK_T));
 	//set timings
 	write_ah(AH_HVACT_REG_ADDR, (GCON_VIDEO_COLS << 16) + GCON_VIDEO_LINES);
 	write_ah(AH_HVTOT_REG_ADDR, (GCON_HTOT << 16) + GCON_VTOT);
 	write_ah(AH_HVFRONT_REG_ADDR, (GCON_HFRONT << 16) + GCON_VFRONT);
 
 	//set vsync, hsync and polarity
-	u32 hvsync = (GCON_HSYNC << 16) + GCON_VSYNC;
+	hvsync = (GCON_HSYNC << 16) + GCON_VSYNC;
 	hvsync |= 0x80008000;
 	write_ah(AH_HVSYNC_REG_ADDR, hvsync);
 
@@ -314,7 +315,6 @@ static void gcon_cursor(struct vc_data *vc, int mode) {
 		return;
 	}
 
-	u8 end = 2 * GCON_FONTW - 1;
 	u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
 
 	switch (mode) {
@@ -396,7 +396,6 @@ static void write_ah(int offset, u32 data) {
 	}
 }
 
-//this isn't very portable, fix hardware first!
 static void write_ah64(int offset, u64 data) {
 	if (mapped_base) {
 		writeq(data, (volatile void *)mapped_base + offset);
@@ -419,9 +418,7 @@ static u64 read_ah64(int offset) {
 	}
 }
 
-/* 
-keeps power status reg as-is 
-*/
+//keeps power status reg as-is
 static void write_text_p_ah(u64 p) {
 	u32 pwr = read_ah(AH_PWR_REG_ADDR);
 	pwr |= (1 << 16);
@@ -438,15 +435,14 @@ static u32 gen_textparam_reg(u16 cols, u16 rows) {
 }
 
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, u8 enable, u8 blink_t) {
-	//start and end - 1 to mimic behavior of vgacon function for cursor size
 	u32 curs_reg = 0;
 	curs_reg |= (col << 24);
 	curs_reg |= (row << 16);
 	curs_reg |= (font_fac << 14);
 	curs_reg |= (enable << 13);
-	curs_reg |= ((start - 1) << 8);
+	curs_reg |= (start << 8);
 	curs_reg |= (blink_t << 5);
-	curs_reg |= ((end - 1) << 0);
+	curs_reg |= (end << 0);
 	return curs_reg;
 }
 
@@ -465,7 +461,7 @@ static void set_xy_cursor(u32 *cur, int col, int row) {
 
 /* --------------------------------
    Debug Functions
-   -------------------------------- */
+   -------------------------------- 
 
 static void printregs(void) {
 	// this prints every 64 bit register from PAPER
@@ -479,6 +475,7 @@ static void printregs(void) {
 	pr_info("TXTPRM:\t0x%llx\n", read_ah64(AH_TEXT_PARAM_ADDR));
 	pr_info("CURPRM:\t0x%llx\n", read_ah64(AH_CURSOR_PARAM_ADDR));
 }
+*/
 
 const struct consw gcon = {
 	.owner = THIS_MODULE,

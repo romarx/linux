@@ -63,11 +63,9 @@ static unsigned short *text_buf = NULL;
    -------------------------------- */
 
 static void write_ah(int offset, u32 data);
-static void write_ah64(int offset, u64 data);
 static u32 read_ah(int offset);
-static u64 read_ah64(int offset);
-static u64 read_current_p_ah(void);
-static void write_text_p_ah(u64 p);
+static u32 read_current_p_ah(void);
+static void write_text_p_ah(u32 p);
 static u32 gen_textparam_reg(u16 cols, u16 rows);
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, u8 enable, u8 blink_t);
 static void set_cursor_size(u32 *cur, u8 start, u8 end);
@@ -75,9 +73,9 @@ static void set_xy_cursor(u32 *cur, int col, int row);
 
 /* --------------------------------
    Debug Functions
-   -------------------------------- 
+   -------------------------------- */
 static void printregs(void);
-*/
+
 
 /* --------------------------------
    Console Functions
@@ -93,13 +91,13 @@ static int gcon_blank(struct vc_data *vc, int blank, int mode_switch) {
 	switch (blank) {
 	case 0: /*unblank*/
 		if (text_buf) {
-			write_text_p_ah((u64)virt_to_phys((volatile void *)vc->vc_origin));
+			write_text_p_ah((u32)virt_to_phys((volatile void *)vc->vc_origin));
 		}
 		return 1;
 	case 1:
 	default: /*blank*/
 		if (blank_buf) {
-			write_text_p_ah((u64)virt_to_phys(blank_buf));
+			write_text_p_ah((u32)virt_to_phys(blank_buf));
 		} else {
 			printk(KERN_ALERT "Blanking attempted with NULL blank_buf; Skipping\n");
 			return 0;
@@ -198,7 +196,7 @@ static void gcon_init(struct vc_data *vc, int init) {
 
 static int gcon_set_origin(struct vc_data *vc) {
 
-	u64 curr_p;
+	u32 curr_p;
 	u32 pwr;
 	unsigned long tp_phys_actual = 0;
 
@@ -223,13 +221,13 @@ static int gcon_set_origin(struct vc_data *vc) {
 
 	// give pointer for text_buffer to PAPER if it changed
 	if (curr_p != tp_phys_actual) {
-		write_text_p_ah((u64)tp_phys_actual);
+		write_text_p_ah((u32)tp_phys_actual);
 	}
 	// power on AXI_HDMI
 	if (!(pwr & 0x1)) {
 		write_ah(AH_PWR_REG_ADDR, 1);
 	}
-	//printregs();
+	printregs();
 	return 1;
 }
 
@@ -379,12 +377,6 @@ static void write_ah(int offset, u32 data) {
 	}
 }
 
-static void write_ah64(int offset, u64 data) {
-	if (mapped_base) {
-		writeq(data, (volatile void *)mapped_base + offset);
-	}
-}
-
 static u32 read_ah(int offset) {
 	if (mapped_base) {
 		return readl((const volatile void *)mapped_base + offset);
@@ -393,24 +385,16 @@ static u32 read_ah(int offset) {
 	}
 }
 
-static u64 read_ah64(int offset) {
-	if (mapped_base) {
-		return readq((const volatile void *)mapped_base + offset);
-	} else {
-		return 0;
-	}
-}
-
 //keeps power status reg as-is
-static void write_text_p_ah(u64 p) {
+static void write_text_p_ah(u32 p) {
 	u32 pwr = read_ah(AH_PWR_REG_ADDR);
 	pwr |= (1 << 16);
 	write_ah(AH_PWR_REG_ADDR, pwr);
-	write_ah64(AH_PNTRQ_ADDR, p);
+	write_ah(AH_PNTRQ_ADDR, p);
 }
 
-static u64 read_current_p_ah(void) {
-	return read_ah64(AH_CURR_PNTR_ADDR);
+static u32 read_current_p_ah(void) {
+	return read_ah(AH_CURR_PNTR_ADDR);
 }
 
 static u32 gen_textparam_reg(u16 cols, u16 rows) {
@@ -444,21 +428,21 @@ static void set_xy_cursor(u32 *cur, int col, int row) {
 
 /* --------------------------------
    Debug Functions
-   -------------------------------- 
+   -------------------------------- */
 
 static void printregs(void) {
-	// this prints every 64 bit register from PAPER
-	pr_info("BASEPT:\t0x%llx\n", read_ah64(AH_PNTRQ_ADDR));
-	pr_info("HVTOTL:\t0x%llx\n", read_ah64(AH_HVTOT_REG_ADDR));
-	pr_info("HVACTI:\t0x%llx\n", read_ah64(AH_HVACT_REG_ADDR));
-	pr_info("HVFRNT:\t0x%llx\n", read_ah64(AH_HVFRONT_REG_ADDR));
-	pr_info("HVSYNC:\t0x%llx\n", read_ah64(AH_HVSYNC_REG_ADDR));
-	pr_info("PWRREG:\t0x%llx\n", read_ah64(AH_PWR_REG_ADDR));
-	pr_info("CURPTR:\t0x%llx\n", read_ah64(AH_CURR_PNTR_ADDR));
-	pr_info("TXTPRM:\t0x%llx\n", read_ah64(AH_TEXT_PARAM_ADDR));
-	pr_info("CURPRM:\t0x%llx\n", read_ah64(AH_CURSOR_PARAM_ADDR));
+	// this prints every register from PAPER
+	pr_info("BASEPT:\t0x%llx\n", read_ah(AH_PNTRQ_ADDR));
+	pr_info("HVTOTL:\t0x%llx\n", read_ah(AH_HVTOT_REG_ADDR));
+	pr_info("HVACTI:\t0x%llx\n", read_ah(AH_HVACT_REG_ADDR));
+	pr_info("HVFRNT:\t0x%llx\n", read_ah(AH_HVFRONT_REG_ADDR));
+	pr_info("HVSYNC:\t0x%llx\n", read_ah(AH_HVSYNC_REG_ADDR));
+	pr_info("PWRREG:\t0x%llx\n", read_ah(AH_PWR_REG_ADDR));
+	pr_info("CURPTR:\t0x%llx\n", read_ah(AH_CURR_PNTR_ADDR));
+	pr_info("TXTPRM:\t0x%llx\n", read_ah(AH_TEXT_PARAM_ADDR));
+	pr_info("CURPRM:\t0x%llx\n", read_ah(AH_CURSOR_PARAM_ADDR));
 }
-*/
+
 
 const struct consw gcon = {
 	.owner = THIS_MODULE,

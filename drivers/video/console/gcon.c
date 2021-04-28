@@ -73,8 +73,9 @@ static void set_xy_cursor(u32 *cur, int col, int row);
 
 /* --------------------------------
    Debug Functions
-   -------------------------------- */
+   -------------------------------- 
 static void printregs(void);
+*/
 
 
 /* --------------------------------
@@ -227,7 +228,7 @@ static int gcon_set_origin(struct vc_data *vc) {
 	if (!(pwr & 0x1)) {
 		write_ah(AH_PWR_REG_ADDR, 1);
 	}
-	printregs();
+	//printregs();
 	return 1;
 }
 
@@ -428,21 +429,21 @@ static void set_xy_cursor(u32 *cur, int col, int row) {
 
 /* --------------------------------
    Debug Functions
-   -------------------------------- */
+   -------------------------------- 
 
 static void printregs(void) {
 	// this prints every register from PAPER
-	pr_info("BASEPT:\t0x%llx\n", read_ah(AH_PNTRQ_ADDR));
-	pr_info("HVTOTL:\t0x%llx\n", read_ah(AH_HVTOT_REG_ADDR));
-	pr_info("HVACTI:\t0x%llx\n", read_ah(AH_HVACT_REG_ADDR));
-	pr_info("HVFRNT:\t0x%llx\n", read_ah(AH_HVFRONT_REG_ADDR));
-	pr_info("HVSYNC:\t0x%llx\n", read_ah(AH_HVSYNC_REG_ADDR));
-	pr_info("PWRREG:\t0x%llx\n", read_ah(AH_PWR_REG_ADDR));
-	pr_info("CURPTR:\t0x%llx\n", read_ah(AH_CURR_PNTR_ADDR));
-	pr_info("TXTPRM:\t0x%llx\n", read_ah(AH_TEXT_PARAM_ADDR));
-	pr_info("CURPRM:\t0x%llx\n", read_ah(AH_CURSOR_PARAM_ADDR));
+	pr_info("BASEPT:\t0x%lx\n", read_ah(AH_PNTRQ_ADDR));
+	pr_info("HVTOTL:\t0x%lx\n", read_ah(AH_HVTOT_REG_ADDR));
+	pr_info("HVACTI:\t0x%lx\n", read_ah(AH_HVACT_REG_ADDR));
+	pr_info("HVFRNT:\t0x%lx\n", read_ah(AH_HVFRONT_REG_ADDR));
+	pr_info("HVSYNC:\t0x%lx\n", read_ah(AH_HVSYNC_REG_ADDR));
+	pr_info("PWRREG:\t0x%lx\n", read_ah(AH_PWR_REG_ADDR));
+	pr_info("CURPTR:\t0x%lx\n", read_ah(AH_CURR_PNTR_ADDR));
+	pr_info("TXTPRM:\t0x%lx\n", read_ah(AH_TEXT_PARAM_ADDR));
+	pr_info("CURPRM:\t0x%lx\n", read_ah(AH_CURSOR_PARAM_ADDR));
 }
-
+*/
 
 const struct consw gcon = {
 	.owner = THIS_MODULE,

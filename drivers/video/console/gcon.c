@@ -34,20 +34,20 @@
 /*
   hardcode video format (SVGA60)
 */
-#define GCON_VIDEO_LINES 600
-#define GCON_VIDEO_COLS 800
-#define GCON_HTOT 1056
-#define GCON_VTOT 628
-#define GCON_HFRONT 40
-#define GCON_VFRONT 1
-#define GCON_HSYNC 128
-#define GCON_VSYNC 4
+#define GCON_VIDEO_LINES 1080
+#define GCON_VIDEO_COLS 1920
+#define GCON_HTOT 2200
+#define GCON_VTOT 1125
+#define GCON_HFRONT 88
+#define GCON_VFRONT 5
+#define GCON_HSYNC 44
+#define GCON_VSYNC 5
 /* log2 of #frames of blink interval */
 #define GCON_BLINK_T 5
 /* font hardcoded for now */
 #define GCON_FONTW 8
-#define GCON_TEXT_ROWS 37
-#define GCON_TEXT_COLS 100
+#define GCON_TEXT_ROWS 67
+#define GCON_TEXT_COLS 240
 
 static int fontfac_param = 0;
 

@@ -26,6 +26,8 @@
 #define AH_FG_COLOR_START_ADDR 0x400
 #define AH_BG_COLOR_START_ADDR 0x800
 
+#define PALETTE_SIZE	256
+
 #define PAPERFB_NAME "PAPER AXI/RGB FB"
 
 static char *mode_option;

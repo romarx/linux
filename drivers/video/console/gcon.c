@@ -150,12 +150,12 @@ static const char *gcon_startup(void) {
 	}
 
 	// allocate memory for the buffers
-	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_USER))) {
+	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_KERNEL))) {
 		pr_alert("Failed to allocate blank buffer memory with kzalloc.\n");
 		return NULL;
 	}
 
-	if (!(text_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_USER))) {
+	if (!(text_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_KERNEL))) {
 		pr_alert("Failed to allocate text buffer memory with kzalloc.\n");
 		return NULL;
 	}

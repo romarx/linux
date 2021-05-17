@@ -118,15 +118,15 @@ static int paperfb_setupfb(struct paperfb_dev *fbdev)
 	
 	paperfb_writereg(fbdev, AH_PNTRQ_ADDR, fbdev->fb_phys);
 
-	pr_info("BASEPT:\t0x%lx\n", paperfb_readreg(fbdev, AH_PNTRQ_ADDR));
-	pr_info("HVTOTL:\t0x%lx\n", paperfb_readreg(fbdev, AH_HVTOT_REG_ADDR));
-	pr_info("HVACTI:\t0x%lx\n", paperfb_readreg(fbdev, AH_HVACT_REG_ADDR));
-	pr_info("HVFRNT:\t0x%lx\n", paperfb_readreg(fbdev, AH_HVFRONT_REG_ADDR));
-	pr_info("HVSYNC:\t0x%lx\n", paperfb_readreg(fbdev, AH_HVSYNC_REG_ADDR));
-	pr_info("PWRREG:\t0x%lx\n", paperfb_readreg(fbdev, AH_PWR_REG_ADDR));
-	pr_info("CURPTR:\t0x%lx\n", paperfb_readreg(fbdev, AH_CURR_PNTR_ADDR));
-	pr_info("TXTPRM:\t0x%lx\n", paperfb_readreg(fbdev, AH_TEXT_PARAM_ADDR));
-	pr_info("CURPRM:\t0x%lx\n", paperfb_readreg(fbdev, AH_CURSOR_PARAM_ADDR));
+	pr_info("BASEPT:\t0x%x\n", paperfb_readreg(fbdev, AH_PNTRQ_ADDR));
+	pr_info("HVTOTL:\t0x%x\n", paperfb_readreg(fbdev, AH_HVTOT_REG_ADDR));
+	pr_info("HVACTI:\t0x%x\n", paperfb_readreg(fbdev, AH_HVACT_REG_ADDR));
+	pr_info("HVFRNT:\t0x%x\n", paperfb_readreg(fbdev, AH_HVFRONT_REG_ADDR));
+	pr_info("HVSYNC:\t0x%x\n", paperfb_readreg(fbdev, AH_HVSYNC_REG_ADDR));
+	pr_info("PWRREG:\t0x%x\n", paperfb_readreg(fbdev, AH_PWR_REG_ADDR));
+	pr_info("CURPTR:\t0x%x\n", paperfb_readreg(fbdev, AH_CURR_PNTR_ADDR));
+	pr_info("TXTPRM:\t0x%x\n", paperfb_readreg(fbdev, AH_TEXT_PARAM_ADDR));
+	pr_info("CURPRM:\t0x%x\n", paperfb_readreg(fbdev, AH_CURSOR_PARAM_ADDR));
 
 	/* Enable display */
 	paperfb_writereg(fbdev, AH_PWR_REG_ADDR, 1);
@@ -272,7 +272,7 @@ static int paperfb_probe(struct platform_device *pdev)
 	/* Allocate color map */
 	ret = fb_alloc_cmap(&fbdev->info.cmap, PALETTE_SIZE, 0);
 	if (ret) {
-		pr_err(&pdev->dev, "Color map allocation failed\n");
+		pr_err("Color map allocation failed\n");
 		kfree(fbdev->fb_virt);
 	}
     

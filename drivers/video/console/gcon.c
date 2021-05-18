@@ -46,7 +46,7 @@
 #define GCON_BLINK_T 5
 /* font hardcoded for now */
 #define GCON_FONTW 8
-#define GCON_TEXT_ROWS 67
+#define GCON_TEXT_ROWS 75
 #define GCON_TEXT_COLS 240
 
 static int fontfac_param = 0;

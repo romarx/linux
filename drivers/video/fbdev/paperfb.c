@@ -130,6 +130,7 @@ static int paperfb_setupfb(struct paperfb_dev *fbdev)
 
 	/* Enable display */
 	paperfb_writereg(fbdev, AH_PWR_REG_ADDR, 1);
+	return 0;
 
 }
 

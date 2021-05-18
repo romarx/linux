@@ -34,14 +34,14 @@
 /*
   hardcode video format (SVGA60)
 */
-#define GCON_VIDEO_LINES 1080
+#define GCON_VIDEO_LINES 1200
 #define GCON_VIDEO_COLS 1920
-#define GCON_HTOT 2200
-#define GCON_VTOT 1125
-#define GCON_HFRONT 88
-#define GCON_VFRONT 5
-#define GCON_HSYNC 44
-#define GCON_VSYNC 5
+#define GCON_HTOT 2080
+#define GCON_VTOT 1235
+#define GCON_HFRONT 48
+#define GCON_VFRONT 3
+#define GCON_HSYNC 32
+#define GCON_VSYNC 6
 /* log2 of #frames of blink interval */
 #define GCON_BLINK_T 5
 /* font hardcoded for now */

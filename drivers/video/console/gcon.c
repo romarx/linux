@@ -34,10 +34,10 @@
 /*
   hardcode video format (SVGA60)
 */
-#define GCON_VIDEO_LINES 1200
-#define GCON_VIDEO_COLS 1920
-#define GCON_HTOT 2080
-#define GCON_VTOT 1235
+#define GCON_VIDEO_LINES 1050
+#define GCON_VIDEO_COLS 1680
+#define GCON_HTOT 1840
+#define GCON_VTOT 1080
 #define GCON_HFRONT 48
 #define GCON_VFRONT 3
 #define GCON_HSYNC 32
@@ -46,8 +46,8 @@
 #define GCON_BLINK_T 5
 /* font hardcoded for now */
 #define GCON_FONTW 8
-#define GCON_TEXT_ROWS 75
-#define GCON_TEXT_COLS 240
+#define GCON_TEXT_ROWS 65
+#define GCON_TEXT_COLS 210
 
 static int fontfac_param = 0;
 
@@ -172,7 +172,7 @@ static const char *gcon_startup(void) {
 	write_ah(AH_HVFRONT_REG_ADDR, (GCON_HFRONT << 16) + GCON_VFRONT);
 
 	// set hsync, vsync and polarity
-	write_ah(AH_HVSYNC_REG_ADDR, ((GCON_HSYNC << 16) + GCON_VSYNC) | 0x80008000);
+	write_ah(AH_HVSYNC_REG_ADDR, ((GCON_HSYNC << 16) + GCON_VSYNC) | 0x80000000);
 
 	gcon_init_done = 1;
 

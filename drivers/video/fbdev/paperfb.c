@@ -42,7 +42,7 @@ static const struct fb_videomode default_mode = {
 
 struct paperfb_dev {
 	struct fb_info info;
-	void __iomem *regs; //this is the remapped AH_BASE?????
+	void __iomem *regs; 
 	/* flag indicating whether the regs are little endian accessed */
 	int little_endian;
 	/* Physical and virtual addresses of framebuffer */
@@ -138,11 +138,12 @@ static int paperfb_setcolreg(unsigned regno, unsigned red, unsigned green,
 			  unsigned blue, unsigned transp,
 			  struct fb_info *info)
 {
+	//What does this do?
 	struct paperfb_dev *fbdev = (struct paperfb_dev *)info->par;
 	u32 color;
 
 	if (regno >= info->cmap.len) {
-		pr_err("regno >= cmap.len\n");
+		dev_err(info->device, "regno >= cmap.len\n");
 		return 1;
 	}
 
@@ -177,6 +178,7 @@ static int paperfb_init_fix(struct paperfb_dev *fbdev)
 static int paperfb_init_var(struct paperfb_dev *fbdev)
 {
 	struct fb_var_screeninfo *var = &fbdev->info.var;
+	struct device *dev = fbdev->info.device;
 
 	var->accel_flags = FB_ACCEL_NONE;
 	var->activate = FB_ACTIVATE_NOW;
@@ -184,7 +186,7 @@ static int paperfb_init_var(struct paperfb_dev *fbdev)
 	var->yres_virtual = var->yres;
 
 	if(var->bits_per_pixel != 24){
-		pr_err("Colour depth not supported!");
+		dev_err(dev, "Colour depth not supported!\n");
 		return -EINVAL;
 	}else{
 		var->transp.offset = 0;
@@ -203,7 +205,7 @@ static int paperfb_init_var(struct paperfb_dev *fbdev)
 static struct fb_ops paperfb_ops = {
 	.owner		= THIS_MODULE,
 	.fb_setcolreg	= paperfb_setcolreg, 
-	.fb_fillrect	= cfb_fillrect, //these 3 have to be implemented here probably
+	.fb_fillrect	= cfb_fillrect, 
 	.fb_copyarea	= cfb_copyarea,
 	.fb_imageblit	= cfb_imageblit,
 };
@@ -230,23 +232,21 @@ static int paperfb_probe(struct platform_device *pdev)
     /* Video mode setup */
 	if (!fb_find_mode(&fbdev->info.var, &fbdev->info, mode_option,
 			  NULL, 0, &default_mode, 24)) {
-		pr_err("No valid video modes found\n");
+		dev_err(&pdev->dev, "No valid video modes found\n");
 		return -EINVAL;
 	}
 	paperfb_init_var(fbdev); 
 	paperfb_init_fix(fbdev); 
 
     /* Request I/O resource */
-    // request memory mapped IO for PAPER
-	if (!request_mem_region(AH_BASE, 4096, "PAPER Framebuffer driver")) {
-		printk(KERN_ALERT "Failed to reserve A2H IO Address Space!\n");
-		return NULL;
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	if (!res) {
+		dev_err(&pdev->dev, "I/O resource request failed\n");
+		return -ENXIO;
 	}
-
-	// get a base for memory mapped IO, size of PAPER's IO is 4kb
-	if (!(fbdev->regs = ioremap((resource_size_t)AH_BASE, 4096))) {
-		printk(KERN_ALERT "IOremap failed\n");
-		return NULL;
+	fbdev->regs = devm_ioremap_resource(&pdev->dev, res);
+	if (IS_ERR(fbdev->regs)){
+		return PTR_ERR(fbdev->regs);
 	}
 
     /* Allocate framebuffer memory */
@@ -255,7 +255,7 @@ static int paperfb_probe(struct platform_device *pdev)
 	fbdev->fb_virt = kzalloc(fbsize, GFP_KERNEL);
 	
     if (!fbdev->fb_virt) {
-		pr_err("Frame buffer memory allocation failed\n");
+		dev_err(&pdev->dev, "Frame buffer memory allocation failed\n");
 		return -ENOMEM;
 	}
 
@@ -273,7 +273,7 @@ static int paperfb_probe(struct platform_device *pdev)
 	/* Allocate color map */
 	ret = fb_alloc_cmap(&fbdev->info.cmap, PALETTE_SIZE, 0);
 	if (ret) {
-		pr_err("Color map allocation failed\n");
+		dev_err(&pdev->dev, "Color map allocation failed\n");
 		kfree(fbdev->fb_virt);
 	}
     
@@ -281,7 +281,7 @@ static int paperfb_probe(struct platform_device *pdev)
     /* Register framebuffer */
 	ret = register_framebuffer(&fbdev->info);
 	if (ret) {
-		pr_err("Framebuffer registration failed\n");
+		dev_err(&pdev->dev, "Framebuffer registration failed\n");
 		fb_dealloc_cmap(&fbdev->info.cmap);
 	}
 
@@ -294,8 +294,9 @@ static int paperfb_remove(struct platform_device *pdev)
 
 	unregister_framebuffer(&fbdev->info);
 	fb_dealloc_cmap(&fbdev->info.cmap);
-
 	kfree(fbdev->fb_virt);
+	
+	//needs to be made differently
 	iounmap(fbdev->regs);
 
 	/* Disable display */
@@ -306,12 +307,21 @@ static int paperfb_remove(struct platform_device *pdev)
 	return 0;
 }
 
+//what is an of device / i2c device
+
+static struct of_device_id paperfb_match[] = {
+	{ .compatible = "paper,paperfb", },
+	{},
+};
+MODULE_DEVICE_TABLE(of, paperfb_match);
+
 
 static struct platform_driver paperfb_driver = {
 	.probe  = paperfb_probe,
 	.remove	= paperfb_remove,
 	.driver = {
 		.name = "paperfb",
+		.of_match_table = paperfb_match,		
 	}
 };
 
@@ -339,9 +349,8 @@ static void __exit paperfb_exit(void)
 module_init(paperfb_init);
 module_exit(paperfb_exit);
 
-MODULE_AUTHOR("Roman Marquart <maroman@student.ethz.ch>");
 MODULE_DESCRIPTION("Framebuffer driver for PAPER on ariane");
-
+MODULE_LICENCE(GPL)
 //TODO: find the right options for PAPER
 module_param(mode_option, charp, 0);
 MODULE_PARM_DESC(mode_option, "Video mode ('<xres>x<yres>[-<bpp>][@refresh]')");

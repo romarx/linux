@@ -294,12 +294,10 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px, 
 }
 
 static void gcon_cursor(struct vc_data *vc, int mode) {
+	u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
 	if (vc->vc_mode != KD_TEXT) {
 		return;
 	}
-
-	u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
-
 	switch (mode) {
 	case CM_ERASE:
 		cur &= 0xffffdfff; //disable cursor

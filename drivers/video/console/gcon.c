@@ -43,7 +43,7 @@
 #define GCON_HSYNC 32
 #define GCON_VSYNC 6
 #define GCON_HSYNCP 1
-#define GCON_VSYNCP 0
+#define GCON_VSYNCP 1
 /* log2 of #frames of blink interval */
 #define GCON_BLINK_T 5
 /* font hardcoded for now */

@@ -43,7 +43,7 @@
 #define GCON_HSYNC 32
 #define GCON_VSYNC 6
 #define GCON_HSYNCP 1
-#define GCON_VSYNCP 1
+#define GCON_VSYNCP 0
 /* log2 of #frames of blink interval */
 #define GCON_BLINK_T 5
 /* font hardcoded for now */
@@ -175,7 +175,7 @@ static const char *gcon_startup(void) {
 	write_ah(AH_HVFRONT_REG_ADDR, (GCON_HFRONT << 16) + GCON_VFRONT);
 
 	// set hsync, vsync and polarity
-	hvsync = ((((GCON_HSYNC << 16) + GCON_VSYNC) | (GCON_HSYNCP << 31)) | (GCON_VSYNCP << 15)) 
+	hvsync = ((((GCON_HSYNC << 16) + GCON_VSYNC) | (GCON_HSYNCP << 31)) | (GCON_VSYNCP << 15));
 	write_ah(AH_HVSYNC_REG_ADDR, hvsync);
 
 	gcon_init_done = 1;

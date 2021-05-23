@@ -82,11 +82,12 @@ static void paperfb_writereg(struct paperfb_dev *fbdev, loff_t offset, u32 data)
 
 static int paperfb_setupfb(struct paperfb_dev *fbdev)
 {
-	pr_info("Entered paperfb_setupfb");
 	struct fb_var_screeninfo *var = &fbdev->info.var;
 	u32 hlen;
 	u32 vlen;
 	u32 hvsync;
+
+	pr_info("Entered paperfb_setupfb");
 
 	/* Disable display */
 	paperfb_writereg(fbdev, AH_PWR_REG_ADDR, 0);
@@ -139,7 +140,6 @@ static int paperfb_setcolreg(unsigned regno, unsigned red, unsigned green,
 {
 	//What does this do?
 	struct paperfb_dev *fbdev = (struct paperfb_dev *)info->par;
-	u32 color;
 
 	if (regno >= info->cmap.len) {
 		dev_err(info->device, "regno >= cmap.len\n");
@@ -156,6 +156,7 @@ static int paperfb_setcolreg(unsigned regno, unsigned red, unsigned green,
 			(green << info->var.green.offset) |
 			(blue << info->var.blue.offset) |
 			(transp << info->var.transp.offset);
+	return 0;
 }
 
 static int paperfb_init_fix(struct paperfb_dev *fbdev)
@@ -212,13 +213,14 @@ static struct fb_ops paperfb_ops = {
 
 static int paperfb_probe(struct platform_device *pdev)
 {
-	pr_info("Entered paperfb_probe");
 	int ret = 0;
 	struct paperfb_dev *fbdev;
 	struct resource *res;
 	int fbsize;
-
-    fbdev = devm_kzalloc(&pdev->dev, sizeof(*fbdev), GFP_KERNEL);
+    
+	pr_info("Entered paperfb_probe");
+    
+	fbdev = devm_kzalloc(&pdev->dev, sizeof(*fbdev), GFP_KERNEL);
 	if (!fbdev)
 		return -ENOMEM;
 
@@ -349,7 +351,7 @@ module_init(paperfb_init);
 module_exit(paperfb_exit);
 
 MODULE_DESCRIPTION("Framebuffer driver for PAPER on ariane");
-MODULE_LICENCE(GPL);
+MODULE_LICENCE("GPL");
 //TODO: find the right options for PAPER
 module_param(mode_option, charp, 0);
 MODULE_PARM_DESC(mode_option, "Video mode ('<xres>x<yres>[-<bpp>][@refresh]')");

@@ -138,8 +138,6 @@ static int paperfb_setcolreg(unsigned regno, unsigned red, unsigned green,
 			  unsigned blue, unsigned transp,
 			  struct fb_info *info)
 {
-	//What does this do?
-	struct paperfb_dev *fbdev = (struct paperfb_dev *)info->par;
 
 	if (regno >= info->cmap.len) {
 		dev_err(info->device, "regno >= cmap.len\n");
@@ -351,7 +349,6 @@ module_init(paperfb_init);
 module_exit(paperfb_exit);
 
 MODULE_DESCRIPTION("Framebuffer driver for PAPER on ariane");
-MODULE_LICENCE("GPL");
 //TODO: find the right options for PAPER
 module_param(mode_option, charp, 0);
 MODULE_PARM_DESC(mode_option, "Video mode ('<xres>x<yres>[-<bpp>][@refresh]')");

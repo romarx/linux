@@ -13,7 +13,6 @@
 #include <linux/slab.h>
 
 
-#define AH_BASE 0x19000000
 #define AH_PNTRQ_ADDR 0x0
 #define AH_HVTOT_REG_ADDR 0x8
 #define AH_HVACT_REG_ADDR 0x10
@@ -51,7 +50,7 @@ struct paperfb_dev {
 	u32 pseudo_palette[PALETTE_SIZE]; 
 };
 
-//TODO: is this necessary (probably if you can set video modes)
+
 #ifndef MODULE
 static int __init paperfb_setup(char *options)
 {
@@ -320,7 +319,7 @@ static struct platform_driver paperfb_driver = {
 	.probe  = paperfb_probe,
 	.remove	= paperfb_remove,
 	.driver = {
-		.name = "paperfb",
+		.name = "paper_fb",
 		.of_match_table = paperfb_match,		
 	}
 };

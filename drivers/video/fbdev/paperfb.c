@@ -34,6 +34,7 @@ static char *mode_option;
 //TODO: set to 800x600 or 1920x1080 @60 hz and wtf do all these values mean???
 static const struct fb_videomode default_mode = {
 	/* 800x600 @ 60 Hz, 37.8 kHz hsync */
+	/* NULL, <Freq>, <hact>, <vact>, <?>, <hback>, <hfront>, <vback>, <vfront>, <hsync>, <vsync>, <hsyncpol | vsyncpol>, <vmode>, <isvesa>*/
 	NULL, 60, 800, 600, 25000, 88, 40, 23, 1, 128, 4,
 		FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
 		FB_VMODE_NONINTERLACED 
@@ -214,12 +215,14 @@ static int paperfb_probe(struct platform_device *pdev)
 	struct paperfb_dev *fbdev;
 	struct resource *res;
 	int fbsize;
-    
+
 	pr_info("Entered paperfb_probe");
-    
+
 	fbdev = devm_kzalloc(&pdev->dev, sizeof(*fbdev), GFP_KERNEL);
 	if (!fbdev)
 		return -ENOMEM;
+	
+	pr_info("fbdev alloc success");
 
 	platform_set_drvdata(pdev, fbdev);
 
@@ -233,8 +236,13 @@ static int paperfb_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "No valid video modes found\n");
 		return -EINVAL;
 	}
+
+	pr_info("set video mode success");
+	
 	paperfb_init_var(fbdev); 
-	paperfb_init_fix(fbdev); 
+	paperfb_init_fix(fbdev);
+
+	pr_info("init var and fix success"); 
 
     /* Request I/O resource */
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
@@ -242,26 +250,30 @@ static int paperfb_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "I/O resource request failed\n");
 		return -ENXIO;
 	}
+
+	pr_info("resource request success");
+
 	fbdev->regs = devm_ioremap_resource(&pdev->dev, res);
 	if (IS_ERR(fbdev->regs)){
 		return PTR_ERR(fbdev->regs);
 	}
+	pr_info("remap of IO success");
 
     /* Allocate framebuffer memory */
     // without dma engine, maybe try to activate it once and try on gcon...
 	fbsize = fbdev->info.fix.smem_len;
 	fbdev->fb_virt = kzalloc(fbsize, GFP_KERNEL);
 	
-    if (!fbdev->fb_virt) {
+	if (!fbdev->fb_virt) {
 		dev_err(&pdev->dev, "Frame buffer memory allocation failed\n");
 		return -ENOMEM;
 	}
 
-    fbdev->fb_phys = virt_to_phys(fbdev->fb_virt);
+	fbdev->fb_phys = virt_to_phys(fbdev->fb_virt);
 	fbdev->info.fix.smem_start = fbdev->fb_phys;
 	fbdev->info.screen_base = fbdev->fb_virt;
 	fbdev->info.pseudo_palette = fbdev->pseudo_palette;
-    
+
     /* Setup and enable the framebuffer */
 	paperfb_setupfb(fbdev);
 
@@ -274,14 +286,15 @@ static int paperfb_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "Color map allocation failed\n");
 		kfree(fbdev->fb_virt);
 	}
-    
-    
+
+
     /* Register framebuffer */
 	ret = register_framebuffer(&fbdev->info);
 	if (ret) {
 		dev_err(&pdev->dev, "Framebuffer registration failed\n");
 		fb_dealloc_cmap(&fbdev->info.cmap);
 	}
+	pr_info("framebuffer registration success");
 
 	return ret;
 }
@@ -302,7 +315,7 @@ static int paperfb_remove(struct platform_device *pdev)
 	return 0;
 }
 
-//what is an of device / i2c device
+
 
 static struct of_device_id paperfb_match[] = {
 	{ .compatible = "paper,paperfb", },

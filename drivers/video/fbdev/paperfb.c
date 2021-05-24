@@ -63,9 +63,12 @@ struct paperfb_dev {
 #ifndef MODULE
 static int __init paperfb_setup(char *options)
 {
-	char *curr_opt;
+        
 
-	if (!options || !*options)
+	char *curr_opt;
+        pr_info("Entered paperfb_setup");
+	
+        if (!options || !*options)
 		return 0;
 
 	while ((curr_opt = strsep(&options, ",")) != NULL) {
@@ -344,6 +347,7 @@ static struct platform_driver paperfb_driver = {
  */
 static int __init paperfb_init(void)
 {
+        pr_info("Entered paperfb_init");
 #ifndef MODULE
 	char *option = NULL;
 

@@ -99,11 +99,5 @@ void __init setup_arch(char **cmdline_p)
 #endif
 #endif
 
-/* original
-#ifdef CONFIG_DUMMY_CONSOLE
-	pr_info("Setup dummy console\n");
-	conswitchp = &dummy_con;
-#endif
-*/
 	riscv_fill_hwcap();
 }

@@ -1,11 +1,11 @@
 #include <linux/delay.h>
-#include <linux/dma-mapping.h>
+//#include <linux/dma-mapping.h>
 #include <linux/errno.h>
 #include <linux/fb.h>
 #include <linux/init.h>
 #include <linux/io.h> 
 #include <linux/kernel.h>
-#include <linux/mm.h> //do I need this? (probably)
+#include <linux/mm.h> 
 #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/platform_device.h>
@@ -118,6 +118,7 @@ static int paperfb_setupfb(struct paperfb_dev *fbdev)
 	
 	paperfb_writereg(fbdev, AH_PNTRQ_ADDR, fbdev->fb_phys);
 
+	//check addresses
 	pr_info("BASEPT:\t0x%x\n", paperfb_readreg(fbdev, AH_PNTRQ_ADDR));
 	pr_info("HVTOTL:\t0x%x\n", paperfb_readreg(fbdev, AH_HVTOT_REG_ADDR));
 	pr_info("HVACTI:\t0x%x\n", paperfb_readreg(fbdev, AH_HVACT_REG_ADDR));
@@ -147,13 +148,11 @@ static int paperfb_setcolreg(unsigned regno, unsigned red, unsigned green,
 	red >>= (16 - info->var.red.length);
 	green >>= (16 - info->var.green.length);
 	blue >>= (16 - info->var.blue.length);
-	transp >>= (16 - info->var.transp.length);
 
 	((u32 *)(info->pseudo_palette))[regno] =
 			(red << info->var.red.offset) |
 			(green << info->var.green.offset) |
-			(blue << info->var.blue.offset) |
-			(transp << info->var.transp.offset);
+			(blue << info->var.blue.offset);
 	return 0;
 }
 
@@ -266,7 +265,7 @@ static int paperfb_probe(struct platform_device *pdev)
     /* Setup and enable the framebuffer */
 	paperfb_setupfb(fbdev);
 
-    
+    //check what kind of Eindianness it has
 	//fbdev->info.flags |= FBINFO_FOREIGN_ENDIAN;
 
 	/* Allocate color map */
@@ -294,9 +293,6 @@ static int paperfb_remove(struct platform_device *pdev)
 	unregister_framebuffer(&fbdev->info);
 	fb_dealloc_cmap(&fbdev->info.cmap);
 	kfree(fbdev->fb_virt);
-	
-	//needs to be made differently
-	iounmap(fbdev->regs);
 
 	/* Disable display */
 	paperfb_writereg(fbdev, AH_PWR_REG_ADDR, 0);

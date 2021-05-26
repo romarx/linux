@@ -215,9 +215,11 @@ static const char *gcon_startup(void)
 
 	// on startup, power off AXI_HDMI
 	write_ah(AH_PWR_REG_ADDR, 0);
-
+	
+	//set VCO
 	write_clk(CLK_FBOUT, FBOUT);
-
+	
+	//configure clocks
 	write_clk(CLK0_DIV, CLK0DIV);
 	write_clk(CLK0_DUTY, DUTY);
 	write_clk(CLK0_PHASE, PHASE);
@@ -225,7 +227,8 @@ static const char *gcon_startup(void)
 	write_clk(CLK1_DIV, CLK1DIV);
 	write_clk(CLK1_DUTY, DUTY);
 	write_clk(CLK1_PHASE, PHASE);
-
+	
+	//reconfigure clock when ready
 	while (!read_clk(CLK_STATUS)) {
 		continue;
 	}

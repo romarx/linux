@@ -37,12 +37,12 @@
 */
 #define CLK_STATUS 0x4
 #define CLK_FBOUT 0x200
-#define CLK0_DIV 0x208 
-#define CLK0_PHASE 0x20C 
-#define CLK0_DUTY 0x210 
-#define CLK1_DIV 0x214 
-#define CLK1_PHASE 0x218 
-#define CLK1_DUTY 0x21C 
+#define CLK0_DIV 0x208
+#define CLK0_PHASE 0x20C
+#define CLK0_DUTY 0x210
+#define CLK1_DIV 0x214
+#define CLK1_PHASE 0x218
+#define CLK1_DUTY 0x21C
 #define CLK_RECONF 0x25C
 
 /*
@@ -71,7 +71,6 @@
 #define PHASE 0
 #define DUTY 50000
 
-
 static int fontfac_param = 0;
 
 static bool gcon_init_done = 0;
@@ -94,7 +93,8 @@ static u32 read_clk(int offset);
 static u32 read_current_p_ah(void);
 static void write_text_p_ah(u32 p);
 static u32 gen_textparam_reg(u16 cols, u16 rows);
-static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, u8 enable, u8 blink_t);
+static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
+			       u8 enable, u8 blink_t);
 static void set_cursor_size(u32 *cur, u8 start, u8 end);
 static void set_xy_cursor(u32 *cur, int col, int row);
 
@@ -104,22 +104,26 @@ static void set_xy_cursor(u32 *cur, int col, int row);
 static void printregs(void);
 */
 
-
 /* --------------------------------
    Console Functions
    -------------------------------- */
 
-static void gcon_putc(struct vc_data *vc, int c, int ypos, int xpos) {
+static void gcon_putc(struct vc_data *vc, int c, int ypos, int xpos)
+{
 }
 
-static void gcon_putcs(struct vc_data *vc, const unsigned short *s, int count, int ypos, int xpos) {
+static void gcon_putcs(struct vc_data *vc, const unsigned short *s, int count,
+		       int ypos, int xpos)
+{
 }
 
-static int gcon_blank(struct vc_data *vc, int blank, int mode_switch) {
+static int gcon_blank(struct vc_data *vc, int blank, int mode_switch)
+{
 	switch (blank) {
 	case 0: /*unblank*/
 		if (text_buf) {
-			write_text_p_ah((u32)virt_to_phys((volatile void *)vc->vc_origin));
+			write_text_p_ah((u32)virt_to_phys(
+				(volatile void *)vc->vc_origin));
 		}
 		return 1;
 	case 1:
@@ -127,7 +131,8 @@ static int gcon_blank(struct vc_data *vc, int blank, int mode_switch) {
 		if (blank_buf) {
 			write_text_p_ah((u32)virt_to_phys(blank_buf));
 		} else {
-			printk(KERN_ALERT "Blanking attempted with NULL blank_buf; Skipping\n");
+			printk(KERN_ALERT
+			       "Blanking attempted with NULL blank_buf; Skipping\n");
 			return 0;
 		}
 		return 1;
@@ -135,7 +140,8 @@ static int gcon_blank(struct vc_data *vc, int blank, int mode_switch) {
 	return 0;
 }
 
-static const char *gcon_startup(void) {
+static const char *gcon_startup(void)
+{
 	const char *display_desc = "AXI_HDMI Text Mode Console";
 
 	u8 max_fontfac_w, max_fontfac_h, max_fontfac;
@@ -160,7 +166,8 @@ static const char *gcon_startup(void) {
 
 	// request memory mapped IO for CLKGEN
 	if (!request_mem_region(CLKGEN_BASE, 2048, "Clock generator")) {
-		printk(KERN_ALERT "Failed to reserve clkgen IO Address Space!\n");
+		printk(KERN_ALERT
+		       "Failed to reserve clkgen IO Address Space!\n");
 		return NULL;
 	}
 
@@ -173,7 +180,8 @@ static const char *gcon_startup(void) {
 
 	max_fontfac_w = GCON_VIDEO_COLS / (GCON_TEXT_COLS * GCON_FONTW);
 	max_fontfac_h = GCON_VIDEO_LINES / (GCON_TEXT_ROWS * 2 * GCON_FONTW);
-	max_fontfac = (max_fontfac_w < max_fontfac_h) ? max_fontfac_w : max_fontfac_h;
+	max_fontfac =
+		(max_fontfac_w < max_fontfac_h) ? max_fontfac_w : max_fontfac_h;
 	fontfac_param = 0;
 
 	switch (max_fontfac) {
@@ -191,21 +199,25 @@ static const char *gcon_startup(void) {
 	}
 
 	// allocate memory for the buffers
-	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_KERNEL))) {
-		pr_alert("Failed to allocate blank buffer memory with kzalloc.\n");
+	if (!(blank_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
+				  GFP_KERNEL))) {
+		pr_alert(
+			"Failed to allocate blank buffer memory with kzalloc.\n");
 		return NULL;
 	}
 
-	if (!(text_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16), GFP_KERNEL))) {
-		pr_alert("Failed to allocate text buffer memory with kzalloc.\n");
+	if (!(text_buf = kzalloc(GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16),
+				 GFP_KERNEL))) {
+		pr_alert(
+			"Failed to allocate text buffer memory with kzalloc.\n");
 		return NULL;
 	}
 
 	// on startup, power off AXI_HDMI
 	write_ah(AH_PWR_REG_ADDR, 0);
 
-	write_clk(CLK_FBOUT,FBOUT);
-	
+	write_clk(CLK_FBOUT, FBOUT);
+
 	write_clk(CLK0_DIV, CLK0DIV);
 	write_clk(CLK0_DUTY, DUTY);
 	write_clk(CLK0_PHASE, PHASE);
@@ -214,17 +226,17 @@ static const char *gcon_startup(void) {
 	write_clk(CLK1_DUTY, DUTY);
 	write_clk(CLK1_PHASE, PHASE);
 
-	while(!read_clk(CLK_STATUS)){
-        continue;
-    }
-    write_clk(CLK_RECONF, 3);
+	while (!read_clk(CLK_STATUS)) {
+		continue;
+	}
+	write_clk(CLK_RECONF, 3);
 
-
-
-
-	write_ah(AH_TEXT_PARAM_ADDR, gen_textparam_reg(GCON_TEXT_COLS, GCON_TEXT_ROWS));
+	write_ah(AH_TEXT_PARAM_ADDR,
+		 gen_textparam_reg(GCON_TEXT_COLS, GCON_TEXT_ROWS));
 	// cursor off by default
-	write_ah(AH_CURSOR_PARAM_ADDR, gen_cursorparam_reg(0, 0, 0, 2 * GCON_FONTW - 1, fontfac_param, 0, GCON_BLINK_T));
+	write_ah(AH_CURSOR_PARAM_ADDR,
+		 gen_cursorparam_reg(0, 0, 0, 2 * GCON_FONTW - 1, fontfac_param,
+				     0, GCON_BLINK_T));
 
 	//set timings
 	write_ah(AH_HVACT_REG_ADDR, (GCON_VIDEO_COLS << 16) + GCON_VIDEO_LINES);
@@ -232,7 +244,8 @@ static const char *gcon_startup(void) {
 	write_ah(AH_HVFRONT_REG_ADDR, (GCON_HFRONT << 16) + GCON_VFRONT);
 
 	// set hsync, vsync and polarity
-	hvsync = ((((GCON_HSYNC << 16) + GCON_VSYNC) | (GCON_HSYNCP << 31)) | (GCON_VSYNCP << 15));
+	hvsync = ((((GCON_HSYNC << 16) + GCON_VSYNC) | (GCON_HSYNCP << 31)) |
+		  (GCON_VSYNCP << 15));
 	write_ah(AH_HVSYNC_REG_ADDR, hvsync);
 
 	gcon_init_done = 1;
@@ -240,8 +253,8 @@ static const char *gcon_startup(void) {
 	return display_desc;
 }
 
-static void gcon_init(struct vc_data *vc, int init) {
-
+static void gcon_init(struct vc_data *vc, int init)
+{
 	vc->vc_can_do_color = 1;
 	if (init) {
 		vc->vc_cols = GCON_TEXT_COLS;
@@ -256,8 +269,8 @@ static void gcon_init(struct vc_data *vc, int init) {
 	vc->vc_hi_font_mask = 0;
 }
 
-static int gcon_set_origin(struct vc_data *vc) {
-
+static int gcon_set_origin(struct vc_data *vc)
+{
 	u32 curr_p;
 	u32 pwr;
 	unsigned long tp_phys_actual = 0;
@@ -268,7 +281,8 @@ static int gcon_set_origin(struct vc_data *vc) {
 	// set start of text buffer for virtual console
 	if (text_buf) {
 		vc->vc_screenbuf = text_buf;
-		vc->vc_screenbuf_size = GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16);
+		vc->vc_screenbuf_size =
+			GCON_TEXT_COLS * GCON_TEXT_ROWS * sizeof(u16);
 		vc->vc_origin = (unsigned long)text_buf;
 		tp_phys_actual = virt_to_phys(text_buf);
 	} else {
@@ -293,7 +307,9 @@ static int gcon_set_origin(struct vc_data *vc) {
 	return 1;
 }
 
-static u8 gcon_build_attr(struct vc_data *vc, u8 color, u8 intensity, u8 blink, u8 underline, u8 reverse, u8 italic) {
+static u8 gcon_build_attr(struct vc_data *vc, u8 color, u8 intensity, u8 blink,
+			  u8 underline, u8 reverse, u8 italic)
+{
 	u8 attr;
 	attr = color;
 	if (italic) {
@@ -316,7 +332,8 @@ static u8 gcon_build_attr(struct vc_data *vc, u8 color, u8 intensity, u8 blink, 
 	return attr;
 }
 
-static void gcon_deinit(struct vc_data *vc) {
+static void gcon_deinit(struct vc_data *vc)
+{
 	write_ah(AH_PWR_REG_ADDR, 0);
 	iounmap(mapped_base);
 	iounmap(clkgen_base);
@@ -330,10 +347,14 @@ static void gcon_deinit(struct vc_data *vc) {
 		kfree((void *)text_buf);
 	}
 }
-static void gcon_clear(struct vc_data *vc, int sy, int sx, int height, int width) {
+static void gcon_clear(struct vc_data *vc, int sy, int sx, int height,
+		       int width)
+{
 }
 
-static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px, int *py) {
+static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px,
+				int *py)
+{
 	unsigned long ret;
 	int x, y;
 
@@ -356,7 +377,8 @@ static unsigned long gcon_getxy(struct vc_data *vc, unsigned long pos, int *px, 
 	return ret;
 }
 
-static void gcon_cursor(struct vc_data *vc, int mode) {
+static void gcon_cursor(struct vc_data *vc, int mode)
+{
 	u32 cur = read_ah(AH_CURSOR_PARAM_ADDR);
 	if (vc->vc_mode != KD_TEXT) {
 		return;
@@ -372,26 +394,39 @@ static void gcon_cursor(struct vc_data *vc, int mode) {
 		case CUR_UNDERLINE:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
 			set_xy_cursor(&cur, x, y);
-			set_cursor_size(&cur, (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 2 : 3)),
-					(u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
+			set_cursor_size(
+				&cur,
+				(u8)(vc->vc_font.height -
+				     (vc->vc_font.height < 10 ? 2 : 3)),
+				(u8)(vc->vc_font.height -
+				     (vc->vc_font.height < 10 ? 1 : 2)));
 			cur |= 0x00002000; //enable cursor
 			break;
 		case CUR_TWO_THIRDS:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
 			set_xy_cursor(&cur, x, y);
-			set_cursor_size(&cur, (u8)(vc->vc_font.height / 3), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
+			set_cursor_size(
+				&cur, (u8)(vc->vc_font.height / 3),
+				(u8)(vc->vc_font.height -
+				     (vc->vc_font.height < 10 ? 1 : 2)));
 			cur |= 0x00002000;
 			break;
 		case CUR_LOWER_THIRD:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
 			set_xy_cursor(&cur, x, y);
-			set_cursor_size(&cur, (u8)((vc->vc_font.height * 2) / 3), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
+			set_cursor_size(
+				&cur, (u8)((vc->vc_font.height * 2) / 3),
+				(u8)(vc->vc_font.height -
+				     (vc->vc_font.height < 10 ? 1 : 2)));
 			cur |= 0x00002000;
 			break;
 		case CUR_LOWER_HALF:
 			gcon_getxy(vc, vc->vc_pos, &x, &y);
 			set_xy_cursor(&cur, x, y);
-			set_cursor_size(&cur, (u8)(vc->vc_font.height / 2), (u8)(vc->vc_font.height - (vc->vc_font.height < 10 ? 1 : 2)));
+			set_cursor_size(
+				&cur, (u8)(vc->vc_font.height / 2),
+				(u8)(vc->vc_font.height -
+				     (vc->vc_font.height < 10 ? 1 : 2)));
 			cur |= 0x00002000;
 			break;
 		case CUR_NONE:
@@ -409,23 +444,32 @@ static void gcon_cursor(struct vc_data *vc, int mode) {
 	write_ah(AH_CURSOR_PARAM_ADDR, cur);
 }
 
-static bool gcon_scroll(struct vc_data *vc, unsigned int top, unsigned int bottom, enum con_scroll dir, unsigned int lines) {
+static bool gcon_scroll(struct vc_data *vc, unsigned int top,
+			unsigned int bottom, enum con_scroll dir,
+			unsigned int lines)
+{
 	return false;
 }
 
-static int gcon_switch(struct vc_data *vc) {
+static int gcon_switch(struct vc_data *vc)
+{
 	return 1;
 }
 
-static int gcon_font_set(struct vc_data *vc, struct console_font *font, unsigned int flags) {
+static int gcon_font_set(struct vc_data *vc, struct console_font *font,
+			 unsigned int flags)
+{
 	return 0;
 }
 
-static int gcon_font_default(struct vc_data *vc, struct console_font *font, char *name) {
+static int gcon_font_default(struct vc_data *vc, struct console_font *font,
+			     char *name)
+{
 	return 0;
 }
 
-static int gcon_font_copy(struct vc_data *vc, int con) {
+static int gcon_font_copy(struct vc_data *vc, int con)
+{
 	return 0;
 }
 
@@ -433,13 +477,15 @@ static int gcon_font_copy(struct vc_data *vc, int con) {
    Internal Functions
    -------------------------------- */
 
-static void write_ah(int offset, u32 data) {
+static void write_ah(int offset, u32 data)
+{
 	if (mapped_base) {
 		writel(data, (volatile void *)mapped_base + offset);
 	}
 }
 
-static u32 read_ah(int offset) {
+static u32 read_ah(int offset)
+{
 	if (mapped_base) {
 		return readl((const volatile void *)mapped_base + offset);
 	} else {
@@ -447,13 +493,15 @@ static u32 read_ah(int offset) {
 	}
 }
 
-static void write_clk(int offset, u32 data) {
+static void write_clk(int offset, u32 data)
+{
 	if (clkgen_base) {
 		writel(data, (volatile void *)clkgen_base + offset);
 	}
 }
 
-static u32 read_clk(int offset) {
+static u32 read_clk(int offset)
+{
 	if (clkgen_base) {
 		return readl((const volatile void *)clkgen_base + offset);
 	} else {
@@ -462,22 +510,27 @@ static u32 read_clk(int offset) {
 }
 
 //keeps power status reg as-is
-static void write_text_p_ah(u32 p) {
+static void write_text_p_ah(u32 p)
+{
 	u32 pwr = read_ah(AH_PWR_REG_ADDR);
 	pwr |= (1 << 16);
 	write_ah(AH_PWR_REG_ADDR, pwr);
 	write_ah(AH_PNTRQ_ADDR, p);
 }
 
-static u32 read_current_p_ah(void) {
+static u32 read_current_p_ah(void)
+{
 	return read_ah(AH_CURR_PNTR_ADDR);
 }
 
-static u32 gen_textparam_reg(u16 cols, u16 rows) {
+static u32 gen_textparam_reg(u16 cols, u16 rows)
+{
 	return ((cols << 16) + rows);
 }
 
-static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, u8 enable, u8 blink_t) {
+static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
+			       u8 enable, u8 blink_t)
+{
 	u32 curs_reg = 0;
 	curs_reg |= (col << 24);
 	curs_reg |= (row << 16);
@@ -489,14 +542,16 @@ static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac, 
 	return curs_reg;
 }
 
-static void set_cursor_size(u32 *cur, u8 start, u8 end) {
+static void set_cursor_size(u32 *cur, u8 start, u8 end)
+{
 	//start and end - 1 to mimic behavior of vgacon function for cursor size
 	*cur &= 0xffffe0e0;
 	*cur |= ((start - 1) << 8);
 	*cur |= ((end - 1) << 0);
 }
 
-static void set_xy_cursor(u32 *cur, int col, int row) {
+static void set_xy_cursor(u32 *cur, int col, int row)
+{
 	*cur &= 0x0000ffff;
 	*cur |= col << 24;
 	*cur |= row << 16;

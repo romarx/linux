@@ -30,10 +30,9 @@
 
 static char *mode_option;
 
-//TODO: set to 800x600 or 1920x1080 @60 hz and wtf do all these values mean???
 static const struct fb_videomode default_mode = {
 	/* 800x600 @ 60 Hz, 37.8 kHz hsync */
-	/* NULL, <Freq>, <hact>, <vact>, <?>, <hback>, <hfront>, <vback>, <vfront>, <hsync>, <vsync>, <hsyncpol | vsyncpol>, <vmode>, <isvesa>*/
+	/* NULL, <Freq>, <hact>, <vact>, <pxclk_T>, <hback>, <hfront>, <vback>, <vfront>, <hsync>, <vsync>, <hsyncpol | vsyncpol>, <vmode>, <isvesa>*/
 	NULL,
 	60,
 	800,
@@ -63,12 +62,10 @@ struct paperfb_dev {
 #ifndef MODULE
 static int __init paperfb_setup(char *options)
 {
-        
-
 	char *curr_opt;
-        pr_info("Entered paperfb_setup");
-	
-        if (!options || !*options)
+	pr_info("Entered paperfb_setup");
+
+	if (!options || !*options)
 		return 0;
 
 	while ((curr_opt = strsep(&options, ",")) != NULL) {
@@ -94,6 +91,8 @@ static void paperfb_writereg(struct paperfb_dev *fbdev, loff_t offset, u32 data)
 
 static int paperfb_setupfb(struct paperfb_dev *fbdev)
 {
+	//TODO: set pixel clock with var->pixclock (this is the pixel clock period in ps, e.g 25000 for 800x600)
+
 	struct fb_var_screeninfo *var = &fbdev->info.var;
 	u32 hlen;
 	u32 vlen;
@@ -333,21 +332,20 @@ static struct of_device_id paperfb_match[] = {
 };
 MODULE_DEVICE_TABLE(of, paperfb_match);
 
-static struct platform_driver paperfb_driver = { 
-        .probe = paperfb_probe,
-	.remove = paperfb_remove,
-	.driver = {
-	        .name = "paper_fb",
-	        .of_match_table = paperfb_match,
-	} 
-};
+static struct platform_driver paperfb_driver = { .probe = paperfb_probe,
+						 .remove = paperfb_remove,
+						 .driver = {
+							 .name = "paper_fb",
+							 .of_match_table =
+								 paperfb_match,
+						 } };
 
 /*
  * Init and exit routines
  */
 static int __init paperfb_init(void)
 {
-        pr_info("Entered paperfb_init");
+	pr_info("Entered paperfb_init");
 #ifndef MODULE
 	char *option = NULL;
 

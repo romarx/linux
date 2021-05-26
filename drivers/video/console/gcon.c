@@ -15,6 +15,7 @@
 
 #define BLANK 0x0020
 #define AH_BASE 0x19000000
+#define CLKGEN_BASE 0x17000000
 
 /*
   Offsets relative to AH_BASE
@@ -32,30 +33,52 @@
 #define AH_BG_COLOR_START_ADDR 0x800
 
 /*
+  Offsets relative to CLKGEN_BAse
+*/
+#define CLK_STATUS 0x4
+#define CLK_FBOUT 0x200
+#define CLK0_DIV 0x208 
+#define CLK0_PHASE 0x20C 
+#define CLK0_DUTY 0x210 
+#define CLK1_DIV 0x214 
+#define CLK1_PHASE 0x218 
+#define CLK1_DUTY 0x21C 
+#define CLK_RECONF 0x25C
+
+/*
   hardcode video format (SVGA60)
 */
-#define GCON_VIDEO_LINES 1050
-#define GCON_VIDEO_COLS 1680
-#define GCON_HTOT 1840
-#define GCON_VTOT 1080
+#define GCON_VIDEO_LINES 1200
+#define GCON_VIDEO_COLS 1920
+#define GCON_HTOT 2080
+#define GCON_VTOT 1235
 #define GCON_HFRONT 48
 #define GCON_VFRONT 3
 #define GCON_HSYNC 32
 #define GCON_VSYNC 6
 #define GCON_HSYNCP 1
-#define GCON_VSYNCP 1
+#define GCON_VSYNCP 0
 /* log2 of #frames of blink interval */
 #define GCON_BLINK_T 5
 /* font hardcoded for now */
 #define GCON_FONTW 8
-#define GCON_TEXT_ROWS 65
-#define GCON_TEXT_COLS 210
+#define GCON_TEXT_ROWS 75
+#define GCON_TEXT_COLS 240
+
+#define FBOUT 0x00FA1305
+#define CLK0DIV 5
+#define CLK1DIV 1
+#define PHASE 0
+#define DUTY 50000
+
 
 static int fontfac_param = 0;
 
 static bool gcon_init_done = 0;
 
 static void *mapped_base = NULL;
+
+static void *clkgen_base = NULL;
 
 static unsigned short *blank_buf = NULL;
 static unsigned short *text_buf = NULL;
@@ -66,6 +89,8 @@ static unsigned short *text_buf = NULL;
 
 static void write_ah(int offset, u32 data);
 static u32 read_ah(int offset);
+static void write_clk(int offset, u32 data);
+static u32 read_clk(int offset);
 static u32 read_current_p_ah(void);
 static void write_text_p_ah(u32 p);
 static u32 gen_textparam_reg(u16 cols, u16 rows);
@@ -133,6 +158,19 @@ static const char *gcon_startup(void) {
 		return NULL;
 	}
 
+	// request memory mapped IO for CLKGEN
+	if (!request_mem_region(CLKGEN_BASE, 2048, "Clock generator")) {
+		printk(KERN_ALERT "Failed to reserve clkgen IO Address Space!\n");
+		return NULL;
+	}
+
+	// get a base for memory mapped IO, size of CLKGEN IO is 2kb
+	if (!(clkgen_base = ioremap((resource_size_t)CLKGEN_BASE, 2048))) {
+		printk(KERN_ALERT "IOremap clkgen failed\n");
+		clkgen_base = NULL;
+		return NULL;
+	}
+
 	max_fontfac_w = GCON_VIDEO_COLS / (GCON_TEXT_COLS * GCON_FONTW);
 	max_fontfac_h = GCON_VIDEO_LINES / (GCON_TEXT_ROWS * 2 * GCON_FONTW);
 	max_fontfac = (max_fontfac_w < max_fontfac_h) ? max_fontfac_w : max_fontfac_h;
@@ -165,6 +203,25 @@ static const char *gcon_startup(void) {
 
 	// on startup, power off AXI_HDMI
 	write_ah(AH_PWR_REG_ADDR, 0);
+
+	write_clk(CLK_FBOUT,FBOUT);
+	
+	write_clk(CLK0_DIV, CLK0DIV);
+	write_clk(CLK0_DUTY, DUTY);
+	write_clk(CLK0_PHASE, PHASE);
+
+	write_clk(CLK1_DIV, CLK1DIV);
+	write_clk(CLK1_DUTY, DUTY);
+	write_clk(CLK1_PHASE, PHASE);
+
+	while(!read_clk(CLK_STATUS)){
+        continue;
+    }
+    write_clk(CLK_RECONF, 3);
+
+
+
+
 	write_ah(AH_TEXT_PARAM_ADDR, gen_textparam_reg(GCON_TEXT_COLS, GCON_TEXT_ROWS));
 	// cursor off by default
 	write_ah(AH_CURSOR_PARAM_ADDR, gen_cursorparam_reg(0, 0, 0, 2 * GCON_FONTW - 1, fontfac_param, 0, GCON_BLINK_T));
@@ -262,8 +319,10 @@ static u8 gcon_build_attr(struct vc_data *vc, u8 color, u8 intensity, u8 blink, 
 static void gcon_deinit(struct vc_data *vc) {
 	write_ah(AH_PWR_REG_ADDR, 0);
 	iounmap(mapped_base);
+	iounmap(clkgen_base);
 	release_mem_region(AH_BASE, 4096);
 	mapped_base = NULL;
+	clkgen_base = NULL;
 	if (blank_buf) {
 		kfree((void *)blank_buf);
 	}
@@ -383,6 +442,20 @@ static void write_ah(int offset, u32 data) {
 static u32 read_ah(int offset) {
 	if (mapped_base) {
 		return readl((const volatile void *)mapped_base + offset);
+	} else {
+		return 0;
+	}
+}
+
+static void write_clk(int offset, u32 data) {
+	if (clkgen_base) {
+		writel(data, (volatile void *)clkgen_base + offset);
+	}
+}
+
+static u32 read_clk(int offset) {
+	if (clkgen_base) {
+		return readl((const volatile void *)clkgen_base + offset);
 	} else {
 		return 0;
 	}

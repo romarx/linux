@@ -32,7 +32,12 @@ static char *mode_option;
 
 static const struct fb_videomode default_mode = {
 	/* 800x600 @ 60 Hz, 37.8 kHz hsync */
-	/* NULL, <Freq>, <hact>, <vact>, <pxclk_T>, <hback>, <hfront>, <vback>, <vfront>, <hsync>, <vsync>, <hsyncpol | vsyncpol>, <vmode>, <isvesa>*/
+	/* 	
+		NULL, <Freq>, <hact>, <vact>, <pxclk_T>, 
+		<hback>, <hfront>, <vback>, <vfront>, 
+		<hsync>, <vsync>, <hsyncpol | vsyncpol>, 
+		<vmode>, <isvesa>	
+	*/
 	NULL,
 	60,
 	800,
@@ -51,8 +56,6 @@ static const struct fb_videomode default_mode = {
 struct paperfb_dev {
 	struct fb_info info;
 	void __iomem *regs;
-	/* flag indicating whether the regs are little endian accessed */
-	int little_endian;
 	/* Physical and virtual addresses of framebuffer */
 	dma_addr_t fb_phys;
 	void __iomem *fb_virt;
@@ -63,7 +66,6 @@ struct paperfb_dev {
 static int __init paperfb_setup(char *options)
 {
 	char *curr_opt;
-	pr_info("Entered paperfb_setup");
 
 	if (!options || !*options)
 		return 0;
@@ -78,7 +80,6 @@ static int __init paperfb_setup(char *options)
 }
 #endif
 
-//TODO: if these functions don't work, take the ones from gcon (but these would be nicer)
 static inline u32 paperfb_readreg(struct paperfb_dev *fbdev, loff_t offset)
 {
 	return ioread32(fbdev->regs + offset);
@@ -91,14 +92,15 @@ static void paperfb_writereg(struct paperfb_dev *fbdev, loff_t offset, u32 data)
 
 static int paperfb_setupfb(struct paperfb_dev *fbdev)
 {
-	//TODO: set pixel clock with var->pixclock (this is the pixel clock period in ps, e.g 25000 for 800x600)
-
+	/*	TODO: set pixel clock with var->pixclock (this is the pixel 
+		clock period in ps, e.g 25000 for 800x600). This module depends 
+		on the clock wizard driver, it needs to call it to reconfigure 
+		the clock but this functionality is not implemented yet.
+	*/
 	struct fb_var_screeninfo *var = &fbdev->info.var;
 	u32 hlen;
 	u32 vlen;
 	u32 hvsync;
-
-	pr_info("Entered paperfb_setupfb");
 
 	/* Disable display */
 	paperfb_writereg(fbdev, AH_PWR_REG_ADDR, 0);
@@ -114,7 +116,6 @@ static int paperfb_setupfb(struct paperfb_dev *fbdev)
 	       var->yres;
 	paperfb_writereg(fbdev, AH_HVTOT_REG_ADDR, (hlen << 16) + vlen);
 
-	//TODO: Is this right???
 	paperfb_writereg(fbdev, AH_HVFRONT_REG_ADDR,
 			 (var->right_margin << 16) + var->lower_margin);
 
@@ -132,7 +133,7 @@ static int paperfb_setupfb(struct paperfb_dev *fbdev)
 
 	paperfb_writereg(fbdev, AH_PNTRQ_ADDR, fbdev->fb_phys);
 
-	//check addresses
+	/*check addresses
 	pr_info("BASEPT:\t0x%x\n", paperfb_readreg(fbdev, AH_PNTRQ_ADDR));
 	pr_info("HVTOTL:\t0x%x\n", paperfb_readreg(fbdev, AH_HVTOT_REG_ADDR));
 	pr_info("HVACTI:\t0x%x\n", paperfb_readreg(fbdev, AH_HVACT_REG_ADDR));
@@ -143,6 +144,7 @@ static int paperfb_setupfb(struct paperfb_dev *fbdev)
 	pr_info("TXTPRM:\t0x%x\n", paperfb_readreg(fbdev, AH_TEXT_PARAM_ADDR));
 	pr_info("CURPRM:\t0x%x\n",
 		paperfb_readreg(fbdev, AH_CURSOR_PARAM_ADDR));
+	*/
 
 	/* Enable display */
 	paperfb_writereg(fbdev, AH_PWR_REG_ADDR, 1);
@@ -226,13 +228,10 @@ static int paperfb_probe(struct platform_device *pdev)
 	struct resource *res;
 	int fbsize;
 
-	pr_info("Entered paperfb_probe");
-
 	fbdev = devm_kzalloc(&pdev->dev, sizeof(*fbdev), GFP_KERNEL);
-	if (!fbdev)
+	if (!fbdev){
 		return -ENOMEM;
-
-	pr_info("fbdev alloc success");
+	}
 
 	platform_set_drvdata(pdev, fbdev);
 
@@ -247,12 +246,8 @@ static int paperfb_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	pr_info("set video mode success");
-
 	paperfb_init_var(fbdev);
 	paperfb_init_fix(fbdev);
-
-	pr_info("init var and fix success");
 
 	/* Request I/O resource */
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
@@ -261,16 +256,13 @@ static int paperfb_probe(struct platform_device *pdev)
 		return -ENXIO;
 	}
 
-	pr_info("resource request success");
-
 	fbdev->regs = devm_ioremap_resource(&pdev->dev, res);
 	if (IS_ERR(fbdev->regs)) {
 		return PTR_ERR(fbdev->regs);
 	}
-	pr_info("remap of IO success");
 
 	/* Allocate framebuffer memory */
-	// without dma engine, maybe try to activate it once and try on gcon...
+	/* maybe try this with the dma-remapping include, this works but it isn't as nice*/
 	fbsize = fbdev->info.fix.smem_len;
 	fbdev->fb_virt = kzalloc(fbsize, GFP_KERNEL);
 
@@ -287,9 +279,6 @@ static int paperfb_probe(struct platform_device *pdev)
 	/* Setup and enable the framebuffer */
 	paperfb_setupfb(fbdev);
 
-	//check what kind of Eindianness it has
-	//fbdev->info.flags |= FBINFO_FOREIGN_ENDIAN;
-
 	/* Allocate color map */
 	ret = fb_alloc_cmap(&fbdev->info.cmap, PALETTE_SIZE, 0);
 	if (ret) {
@@ -303,7 +292,6 @@ static int paperfb_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "Framebuffer registration failed\n");
 		fb_dealloc_cmap(&fbdev->info.cmap);
 	}
-	pr_info("framebuffer registration success");
 
 	return ret;
 }
@@ -332,21 +320,19 @@ static struct of_device_id paperfb_match[] = {
 };
 MODULE_DEVICE_TABLE(of, paperfb_match);
 
-static struct platform_driver paperfb_driver = { 
-	.probe = paperfb_probe,
-	.remove = paperfb_remove,
-	.driver = {
-		.name = "paper_fb",
-		.of_match_table = paperfb_match,
-	} 
-};
+static struct platform_driver paperfb_driver = { .probe = paperfb_probe,
+						 .remove = paperfb_remove,
+						 .driver = {
+							 .name = "paper_fb",
+							 .of_match_table =
+								 paperfb_match,
+						 } };
 
 /*
  * Init and exit routines
  */
 static int __init paperfb_init(void)
 {
-	pr_info("Entered paperfb_init");
 #ifndef MODULE
 	char *option = NULL;
 
@@ -366,6 +352,5 @@ module_init(paperfb_init);
 module_exit(paperfb_exit);
 
 MODULE_DESCRIPTION("Framebuffer driver for PAPER on ariane");
-//TODO: find the right options for PAPER
 module_param(mode_option, charp, 0);
 MODULE_PARM_DESC(mode_option, "Video mode ('<xres>x<yres>[-<bpp>][@refresh]')");

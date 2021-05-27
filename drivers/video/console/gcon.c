@@ -46,7 +46,7 @@
 #define CLK_RECONF 0x25C
 
 /*
-  hardcode video format (SVGA60)
+  hardcoded video format 
 */
 #define GCON_VIDEO_LINES 1200
 #define GCON_VIDEO_COLS 1920
@@ -58,6 +58,7 @@
 #define GCON_VSYNC 6
 #define GCON_HSYNCP 1
 #define GCON_VSYNCP 0
+
 /* log2 of #frames of blink interval */
 #define GCON_BLINK_T 5
 /* font hardcoded for now */
@@ -65,7 +66,11 @@
 #define GCON_TEXT_ROWS 75
 #define GCON_TEXT_COLS 240
 
-#define FBOUT 0x00FA1305
+//VCO = CLKIN / CLKFBODIV * CLKFBOMUL.CLKFBOFRAC (770 = 200 / 5 * 19.250)
+#define CLKFBODIV 5 // DIV part of VCO
+#define CLKFBOMUL 19 // MUL part of VBO
+#define CLKFBOFRAC 250 // FRAC PART of MUL part (max 10 bits -> 0...1023)
+
 #define CLK0DIV 5
 #define CLK1DIV 1
 #define PHASE 0
@@ -95,6 +100,7 @@ static void write_text_p_ah(u32 p);
 static u32 gen_textparam_reg(u16 cols, u16 rows);
 static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
 			       u8 enable, u8 blink_t);
+static u32 gen_fbout_reg(u8 div, u8 mul, u16 mul_frac);
 static void set_cursor_size(u32 *cur, u8 start, u8 end);
 static void set_xy_cursor(u32 *cur, int col, int row);
 
@@ -215,11 +221,11 @@ static const char *gcon_startup(void)
 
 	// on startup, power off AXI_HDMI
 	write_ah(AH_PWR_REG_ADDR, 0);
-	
-	//set VCO
-	write_clk(CLK_FBOUT, FBOUT);
-	
-	//configure clocks
+
+	// set VCO
+	write_clk(CLK_FBOUT, gen_fbout_reg(CLKFBODIV, CLKFBOMUL, CLKFBOFRAC));
+
+	// configure clocks
 	write_clk(CLK0_DIV, CLK0DIV);
 	write_clk(CLK0_DUTY, DUTY);
 	write_clk(CLK0_PHASE, PHASE);
@@ -227,8 +233,8 @@ static const char *gcon_startup(void)
 	write_clk(CLK1_DIV, CLK1DIV);
 	write_clk(CLK1_DUTY, DUTY);
 	write_clk(CLK1_PHASE, PHASE);
-	
-	//reconfigure clock when ready
+
+	// reconfigure clock when ready
 	while (!read_clk(CLK_STATUS)) {
 		continue;
 	}
@@ -543,6 +549,15 @@ static u32 gen_cursorparam_reg(u16 col, u16 row, u8 start, u8 end, u8 font_fac,
 	curs_reg |= (blink_t << 5);
 	curs_reg |= (end << 0);
 	return curs_reg;
+}
+
+static u32 gen_fbout_reg(u8 div, u8 mul, u16 mul_frac)
+{
+	u32 fbout_reg = 0;
+	fbout_reg |= (mul_frac << 16);
+	fbout_reg |= (mul << 8);
+	fbout_reg |= (div << 0);
+	return fbout_reg;
 }
 
 static void set_cursor_size(u32 *cur, u8 start, u8 end)

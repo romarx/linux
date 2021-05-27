@@ -221,7 +221,7 @@ comment "Frame buffer hardware drivers"
 
 config FB_PAPER
 	tristate "Paper framebuffer support (alpha)"
-	depends on FB
+	depends on FB && COMMON_CLK_XLNX_CLKWZRD
 	select FB_CFB_FILLRECT
 	select FB_CFB_COPYAREA
 	select FB_CFB_IMAGEBLIT

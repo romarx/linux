@@ -332,13 +332,14 @@ static struct of_device_id paperfb_match[] = {
 };
 MODULE_DEVICE_TABLE(of, paperfb_match);
 
-static struct platform_driver paperfb_driver = { .probe = paperfb_probe,
-						 .remove = paperfb_remove,
-						 .driver = {
-							 .name = "paper_fb",
-							 .of_match_table =
-								 paperfb_match,
-						 } };
+static struct platform_driver paperfb_driver = { 
+	.probe = paperfb_probe,
+	.remove = paperfb_remove,
+	.driver = {
+		.name = "paper_fb",
+		.of_match_table = paperfb_match,
+	} 
+};
 
 /*
  * Init and exit routines

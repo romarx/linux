@@ -1,3 +1,8 @@
+/*
+	Framebuffer driver for PAPER AXI HDMI 
+	heavily inspired by ocfb.c 
+*/
+
 #include <linux/delay.h>
 //#include <linux/dma-mapping.h>
 #include <linux/errno.h>
@@ -123,6 +128,7 @@ static int paperfb_setupfb(struct paperfb_dev *fbdev)
 	       var->yres;
 	paperfb_writereg(fbdev, AH_HVTOT_REG_ADDR, (hlen << 16) + vlen);
 
+	/* Horizontal and vertical front porch */
 	paperfb_writereg(fbdev, AH_HVFRONT_REG_ADDR,
 			 (var->right_margin << 16) + var->lower_margin);
 
@@ -137,7 +143,6 @@ static int paperfb_setupfb(struct paperfb_dev *fbdev)
 	paperfb_writereg(fbdev, AH_HVSYNC_REG_ADDR, hvsync);
 
 	/* Put framebuffer address into queue */
-
 	paperfb_writereg(fbdev, AH_PNTRQ_ADDR, fbdev->fb_phys);
 
 	/*check addresses
@@ -236,7 +241,7 @@ static int paperfb_probe(struct platform_device *pdev)
 	int fbsize;
 
 	fbdev = devm_kzalloc(&pdev->dev, sizeof(*fbdev), GFP_KERNEL);
-	if (!fbdev){
+	if (!fbdev) {
 		return -ENOMEM;
 	}
 

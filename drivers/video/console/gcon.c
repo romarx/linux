@@ -66,10 +66,10 @@
 #define GCON_TEXT_ROWS 75
 #define GCON_TEXT_COLS 240
 
-//VCO = CLKIN / CLKFBODIV * CLKFBOMUL.CLKFBOFRAC (770 = 200 / 5 * 19.250)
+//VCO = CLKIN * (CLKFBOMUL.CLKFBOFRAC / CLKFBODIV) (770 = 200 * (19.25 / 5))
 #define CLKFBODIV 5 // DIV part of VCO
 #define CLKFBOMUL 19 // MUL part of VBO
-#define CLKFBOFRAC 250 // FRAC PART of MUL part (max 10 bits -> 0...1023)
+#define CLKFBOFRAC 250 // FRAC PART of MUL part (max 875 in 1/8 steps)
 
 #define CLK0DIV 5
 #define CLK1DIV 1

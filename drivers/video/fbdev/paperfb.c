@@ -94,11 +94,15 @@ static int paperfb_setupfb(struct paperfb_dev *fbdev)
 {
 	/*	TODO: set pixel clock with var->pixclock (this is the pixel 
 		clock period in ps, e.g 25000 for 800x600). 
-		This module depends on the clock wizard driver, it needs to 
+		This module will depend on the clock wizard driver, it needs to 
 		call it to reconfigure the clock but this functionality is 
 		not implemented yet.
 		Add COMMON_CLK_XLNX_CLKWZRD to the dependencies of this module
-		in Kconfig after implementation.
+		in Kconfig after implementation (and enable it).
+		Maybe also copy paste the newest version of the clocking wizard
+		driver from linus torvalds linux git repo for fractional
+		multiplication.
+		It's in drivers/staging/clocking-wizard
 	*/
 	struct fb_var_screeninfo *var = &fbdev->info.var;
 	u32 hlen;

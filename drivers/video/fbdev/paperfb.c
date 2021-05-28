@@ -93,9 +93,12 @@ static void paperfb_writereg(struct paperfb_dev *fbdev, loff_t offset, u32 data)
 static int paperfb_setupfb(struct paperfb_dev *fbdev)
 {
 	/*	TODO: set pixel clock with var->pixclock (this is the pixel 
-		clock period in ps, e.g 25000 for 800x600). This module depends 
-		on the clock wizard driver, it needs to call it to reconfigure 
-		the clock but this functionality is not implemented yet.
+		clock period in ps, e.g 25000 for 800x600). 
+		This module depends on the clock wizard driver, it needs to 
+		call it to reconfigure the clock but this functionality is 
+		not implemented yet.
+		Add COMMON_CLK_XLNX_CLKWZRD to the dependencies of this module
+		in Kconfig after implementation.
 	*/
 	struct fb_var_screeninfo *var = &fbdev->info.var;
 	u32 hlen;

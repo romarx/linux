@@ -1,6 +1,7 @@
 /*
-	Framebuffer driver for PAPER AXI HDMI 
-	heavily inspired by ocfb.c 
+	Framebuffer driver for PAPER AXI HDMI
+	TODO: see annotations in  paperfb_setupfb and 
+	paperfb_probe
 */
 
 #include <linux/delay.h>
@@ -98,16 +99,16 @@ static void paperfb_writereg(struct paperfb_dev *fbdev, loff_t offset, u32 data)
 static int paperfb_setupfb(struct paperfb_dev *fbdev)
 {
 	/*	TODO: set pixel clock with var->pixclock (this is the pixel 
-		clock period in ps, e.g 25000 for 800x600). 
+		clock period in ps, e.g. 25000 (-> 40Mhz) for 800x600). 
 		This module will depend on the clock wizard driver, it needs to 
 		call it to reconfigure the clock but this functionality is 
 		not implemented yet.
 		Add COMMON_CLK_XLNX_CLKWZRD to the dependencies of this module
 		in Kconfig after implementation (and enable it).
-		Maybe also copy paste the newest version of the clocking wizard
+		Maybe also patch the newest version of the clocking wizard
 		driver from linus torvalds linux git repo for fractional
-		multiplication.
-		It's in drivers/staging/clocking-wizard
+		division and multiplication. (more accurate clocks)
+		It's in drivers/staging/clocking-wizard.
 	*/
 	struct fb_var_screeninfo *var = &fbdev->info.var;
 	u32 hlen;
@@ -274,7 +275,11 @@ static int paperfb_probe(struct platform_device *pdev)
 	}
 
 	/* Allocate framebuffer memory */
-	/* maybe try this with the dma-remapping include, this works but it isn't as nice*/
+	/* TODO: maybe try this with the dma-remapping include, this works 
+	but it isn't as nice. If you get it working, try the same in gcon.
+	(see ocfb.c for example, also add dependency HAS_DMA in Kconfig)
+	*/
+
 	fbsize = fbdev->info.fix.smem_len;
 	fbdev->fb_virt = kzalloc(fbsize, GFP_KERNEL);
 
@@ -363,6 +368,6 @@ static void __exit paperfb_exit(void)
 module_init(paperfb_init);
 module_exit(paperfb_exit);
 
-MODULE_DESCRIPTION("Framebuffer driver for PAPER on ariane");
+MODULE_DESCRIPTION("Framebuffer driver for PAPER AXI HDMI interface");
 module_param(mode_option, charp, 0);
 MODULE_PARM_DESC(mode_option, "Video mode ('<xres>x<yres>[-<bpp>][@refresh]')");

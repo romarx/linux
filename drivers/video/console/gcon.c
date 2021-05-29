@@ -71,8 +71,8 @@
 #define CLKFBOMUL 19 // MUL part of VBO
 #define CLKFBOFRAC 250 // FRAC PART of MUL part (max 875 in 1/8 steps)
 
-#define CLK0DIV 5
-#define CLK1DIV 1
+#define CLK0DIV 5 // 154 Mhz Pixel Clock
+#define CLK1DIV 1 // 770 Mhz Serial Pixel Clock
 #define PHASE 0
 #define DUTY 50000
 
@@ -234,11 +234,13 @@ static const char *gcon_startup(void)
 	write_clk(CLK1_DUTY, DUTY);
 	write_clk(CLK1_PHASE, PHASE);
 
-	// reconfigure clock when ready
-	while (!read_clk(CLK_STATUS)) {
-		continue;
+	// reconfigure if ready
+	if (read_clk(CLK_STATUS)) {
+		write_clk(CLK_RECONF, 3);
+	} else {
+		pr_alert("Failed to reconfigure the clock!\n");
+		return NULL;
 	}
-	write_clk(CLK_RECONF, 3);
 
 	write_ah(AH_TEXT_PARAM_ADDR,
 		 gen_textparam_reg(GCON_TEXT_COLS, GCON_TEXT_ROWS));

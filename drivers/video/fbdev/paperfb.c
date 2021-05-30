@@ -98,8 +98,8 @@ static void paperfb_writereg(struct paperfb_dev *fbdev, loff_t offset, u32 data)
 
 static int paperfb_setupfb(struct paperfb_dev *fbdev)
 {
-	/*	TODO: set pixel clock with var->pixclock (this is the pixel 
-		clock period in ps, e.g. 25000 (-> 40Mhz) for 800x600). 
+	/*	TODO: set pixel clock and serial pixel clock with var->pixclock 
+		(this is the pixel clock period in ps, e.g. 25000 (-> 40Mhz) for 800x600). 
 		This module will depend on the clock wizard driver, it needs to 
 		call it to reconfigure the clock but this functionality is 
 		not implemented yet.
@@ -369,5 +369,6 @@ module_init(paperfb_init);
 module_exit(paperfb_exit);
 
 MODULE_DESCRIPTION("Framebuffer driver for PAPER AXI HDMI interface");
+//E.G modprobe paperfb:Video mode ('1280x800-24@60')??
 module_param(mode_option, charp, 0);
 MODULE_PARM_DESC(mode_option, "Video mode ('<xres>x<yres>[-<bpp>][@refresh]')");

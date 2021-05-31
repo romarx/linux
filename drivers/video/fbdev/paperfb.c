@@ -369,6 +369,6 @@ module_init(paperfb_init);
 module_exit(paperfb_exit);
 
 MODULE_DESCRIPTION("Framebuffer driver for PAPER AXI HDMI interface");
-//E.G modprobe paperfb:Video mode ('1280x800-24@60')??
+//E.G modprobe paperfb:video=1280x800-24@60??
 module_param(mode_option, charp, 0);
 MODULE_PARM_DESC(mode_option, "Video mode ('<xres>x<yres>[-<bpp>][@refresh]')");

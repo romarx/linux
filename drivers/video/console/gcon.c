@@ -56,7 +56,7 @@
 #define GCON_VFRONT 1
 #define GCON_HSYNC 136
 #define GCON_VSYNC 3
-#define GCON_HSYNCP 0
+#define GCON_HSYNCP 1
 #define GCON_VSYNCP 1
 
 /* log2 of #frames of blink interval */

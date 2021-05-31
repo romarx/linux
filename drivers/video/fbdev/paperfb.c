@@ -109,6 +109,8 @@ static int paperfb_setupfb(struct paperfb_dev *fbdev)
 		driver from linus torvalds linux git repo for fractional
 		division and multiplication. (more accurate clocks)
 		It's in drivers/staging/clocking-wizard.
+		To avoid all of this, it would also be possible to just make a separate
+		kernel module which can only reconfigure the clock.
 	*/
 	struct fb_var_screeninfo *var = &fbdev->info.var;
 	u32 hlen;

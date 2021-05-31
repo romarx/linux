@@ -138,8 +138,6 @@ static int clk_wzrd_probe(struct platform_device *pdev)
 	struct resource *mem;
 	struct device_node *np = pdev->dev.of_node;
 
-	pr_info("Entered clkwizprobe\n");
-
 	clk_wzrd = devm_kzalloc(&pdev->dev, sizeof(*clk_wzrd), GFP_KERNEL);
 	if (!clk_wzrd)
 		return -ENOMEM;
@@ -290,7 +288,6 @@ err_rm_int_clk:
 err_disable_clk:
 	clk_disable_unprepare(clk_wzrd->axi_clk);
 
-	pr_info("Finished clkwizprobe\n");
 
 	return ret;
 }

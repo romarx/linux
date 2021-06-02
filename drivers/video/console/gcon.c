@@ -48,31 +48,31 @@
 /*
   hardcoded video format 
 */
-#define GCON_VIDEO_LINES 1200
-#define GCON_VIDEO_COLS 1920
-#define GCON_HTOT 2080
-#define GCON_VTOT 1235
-#define GCON_HFRONT 48
-#define GCON_VFRONT 3
-#define GCON_HSYNC 32
-#define GCON_VSYNC 6
+#define GCON_VIDEO_LINES 600
+#define GCON_VIDEO_COLS 800
+#define GCON_HTOT 1056
+#define GCON_VTOT 628
+#define GCON_HFRONT 40
+#define GCON_VFRONT 1
+#define GCON_HSYNC 128
+#define GCON_VSYNC 4
 #define GCON_HSYNCP 1
-#define GCON_VSYNCP 0
+#define GCON_VSYNCP 1
 
 /* log2 of #frames of blink interval */
 #define GCON_BLINK_T 5
 /* font hardcoded for now */
 #define GCON_FONTW 8
-#define GCON_TEXT_ROWS 75
-#define GCON_TEXT_COLS 240
+#define GCON_TEXT_ROWS 37
+#define GCON_TEXT_COLS 100
 
-//VCO = CLKIN * (CLKFBOMUL.CLKFBOFRAC / CLKFBODIV) (770 = 200 * (19.25 / 5))
-#define CLKFBODIV 5 // DIV part of VCO
-#define CLKFBOMUL 19 // MUL part of VBO
-#define CLKFBOFRAC 250 // FRAC PART of MUL part (max 875 in 1/8 steps)
+//VCO = CLKIN * (CLKFBOMUL.CLKFBOFRAC / CLKFBODIV) (1000 = 200 * (5.0 / 1))
+#define CLKFBODIV 1 // DIV part of VCO
+#define CLKFBOMUL 5 // MUL part of VBO
+#define CLKFBOFRAC 0 // FRAC PART of MUL part (max 875 in 1/8 steps)
 
-#define CLK0DIV 5 // 154 Mhz Pixel Clock
-#define CLK1DIV 1 // 770 Mhz Serial Pixel Clock
+#define CLK0DIV 25 // 40 Mhz Pixel Clock
+#define CLK1DIV 5 // 200 Mhz Serial Pixel Clock
 #define PHASE 0
 #define DUTY 50000
 

@@ -5,7 +5,7 @@
 */
 
 #include <linux/delay.h>
-//#include <linux/dma-mapping.h>
+#include <linux/dma-mapping.h>
 #include <linux/errno.h>
 #include <linux/fb.h>
 #include <linux/init.h>
@@ -193,10 +193,10 @@ static int paperfb_init_fix(struct paperfb_dev *fbdev)
 
 	strcpy(fix->id, PAPERFB_NAME);
 
-	//only supported format is 24bbp with packed pixels
 	fix->line_length = var->xres * var->bits_per_pixel / 8;
 	fix->smem_len = fix->line_length * var->yres;
 	fix->type = FB_TYPE_PACKED_PIXELS;
+
 	fix->visual = FB_VISUAL_TRUECOLOR;
 
 	return 0;
@@ -212,7 +212,6 @@ static int paperfb_init_var(struct paperfb_dev *fbdev)
 	var->xres_virtual = var->xres;
 	var->yres_virtual = var->yres;
 
-	//only supported format is 24bbp with packed pixels
 	if (var->bits_per_pixel != 24) {
 		dev_err(dev, "Colour depth not supported!\n");
 		return -EINVAL;
@@ -278,23 +277,19 @@ static int paperfb_probe(struct platform_device *pdev)
 	}
 
 	/* Allocate framebuffer memory */
-	/* TODO: maybe try this with the dma-remapping include, this works 
-	but it isn't as nice. If you get it working, try the same in gcon.
-	(see ocfb.c for example, also add dependency HAS_DMA in Kconfig)
-	*/
-
 	fbsize = fbdev->info.fix.smem_len;
-	fbdev->fb_virt = kzalloc(fbsize, GFP_KERNEL);
-
+	fbdev->fb_virt = dma_alloc_coherent(&pdev->dev, PAGE_ALIGN(fbsize),
+					    &fbdev->fb_phys, GFP_KERNEL);
 	if (!fbdev->fb_virt) {
 		dev_err(&pdev->dev, "Frame buffer memory allocation failed\n");
 		return -ENOMEM;
 	}
-
-	fbdev->fb_phys = virt_to_phys(fbdev->fb_virt);
 	fbdev->info.fix.smem_start = fbdev->fb_phys;
 	fbdev->info.screen_base = fbdev->fb_virt;
 	fbdev->info.pseudo_palette = fbdev->pseudo_palette;
+
+	/* Clear framebuffer */
+	memset_io(fbdev->fb_virt, 0, fbsize);
 
 	/* Setup and enable the framebuffer */
 	paperfb_setupfb(fbdev);
@@ -320,12 +315,12 @@ static int paperfb_remove(struct platform_device *pdev)
 {
 	struct paperfb_dev *fbdev = platform_get_drvdata(pdev);
 
-	/* Disable display */
-	paperfb_writereg(fbdev, AH_PWR_REG_ADDR, 0);
-
 	unregister_framebuffer(&fbdev->info);
 	fb_dealloc_cmap(&fbdev->info.cmap);
 	kfree(fbdev->fb_virt);
+
+	/* Disable display */
+	paperfb_writereg(fbdev, AH_PWR_REG_ADDR, 0);
 
 	platform_set_drvdata(pdev, NULL);
 

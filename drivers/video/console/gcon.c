@@ -33,7 +33,7 @@
 #define AH_BG_COLOR_START_ADDR 0x800
 
 /*
-  Offsets relative to CLKGEN_BAse
+  Offsets relative to CLKGEN_Base
 */
 #define CLK_STATUS 0x4
 #define CLK_FBOUT 0x200

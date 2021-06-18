@@ -193,10 +193,10 @@ static int paperfb_init_fix(struct paperfb_dev *fbdev)
 
 	strcpy(fix->id, PAPERFB_NAME);
 
+	//only supported format is 24bbp with packed pixels
 	fix->line_length = var->xres * var->bits_per_pixel / 8;
 	fix->smem_len = fix->line_length * var->yres;
 	fix->type = FB_TYPE_PACKED_PIXELS;
-
 	fix->visual = FB_VISUAL_TRUECOLOR;
 
 	return 0;
@@ -212,6 +212,7 @@ static int paperfb_init_var(struct paperfb_dev *fbdev)
 	var->xres_virtual = var->xres;
 	var->yres_virtual = var->yres;
 
+	//only supported format is 24bbp with packed pixels
 	if (var->bits_per_pixel != 24) {
 		dev_err(dev, "Colour depth not supported!\n");
 		return -EINVAL;
@@ -319,12 +320,12 @@ static int paperfb_remove(struct platform_device *pdev)
 {
 	struct paperfb_dev *fbdev = platform_get_drvdata(pdev);
 
+	/* Disable display */
+	paperfb_writereg(fbdev, AH_PWR_REG_ADDR, 0);
+
 	unregister_framebuffer(&fbdev->info);
 	fb_dealloc_cmap(&fbdev->info.cmap);
 	kfree(fbdev->fb_virt);
-
-	/* Disable display */
-	paperfb_writereg(fbdev, AH_PWR_REG_ADDR, 0);
 
 	platform_set_drvdata(pdev, NULL);
 

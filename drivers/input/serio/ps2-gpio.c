@@ -136,9 +136,6 @@ static irqreturn_t ps2_gpio_irq_rx(struct ps2_gpio_data *drvdata)
 	byte = drvdata->rx_byte;
 	cnt = drvdata->rx_cnt;
 
-	gpiod_direction_output(drvdata->gpio_data, 0);
-	gpiod_direction_input(drvdata->gpio_data);
-
 	if (old_jiffies == 0)
 		old_jiffies = jiffies;
 

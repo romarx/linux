@@ -5,7 +5,7 @@
 */
 
 #include <linux/delay.h>
-//#include <linux/dma-mapping.h>
+#include <linux/dma-mapping.h>
 #include <linux/errno.h>
 #include <linux/fb.h>
 #include <linux/init.h>
@@ -280,7 +280,7 @@ static int paperfb_probe(struct platform_device *pdev)
 	/* TODO: maybe try this with the dma-remapping include, this works 
 	but it isn't as nice. If you get it working, try the same in gcon.
 	(see ocfb.c for example, also add dependency HAS_DMA in Kconfig)
-	*/
+	
 
 	fbsize = fbdev->info.fix.smem_len;
 	fbdev->fb_virt = kzalloc(fbsize, GFP_KERNEL);
@@ -294,6 +294,23 @@ static int paperfb_probe(struct platform_device *pdev)
 	fbdev->info.fix.smem_start = fbdev->fb_phys;
 	fbdev->info.screen_base = fbdev->fb_virt;
 	fbdev->info.pseudo_palette = fbdev->pseudo_palette;
+	*/
+
+/* Allocate framebuffer memory */
+	fbsize = fbdev->info.fix.smem_len;
+	fbdev->fb_virt = dma_alloc_coherent(&pdev->dev, PAGE_ALIGN(fbsize),
+					    &fbdev->fb_phys, GFP_KERNEL);
+	if (!fbdev->fb_virt) {
+		dev_err(&pdev->dev,
+			"Frame buffer memory allocation failed\n");
+		return -ENOMEM;
+	}
+	fbdev->info.fix.smem_start = fbdev->fb_phys;
+	fbdev->info.screen_base = fbdev->fb_virt;
+	fbdev->info.pseudo_palette = fbdev->pseudo_palette;
+
+	/* Clear framebuffer */
+	memset_io(fbdev->fb_virt, 0, fbsize);
 
 	/* Setup and enable the framebuffer */
 	paperfb_setupfb(fbdev);

@@ -38,14 +38,12 @@
 #include <asm/thread_info.h>
 
 #ifdef CONFIG_DUMMY_CONSOLE
-struct screen_info screen_info = {
-	.orig_video_lines	= 30,
-	.orig_video_cols	= 80,
-	.orig_video_mode	= 0,
-	.orig_video_ega_bx	= 0,
-	.orig_video_isVGA	= 1,
-	.orig_video_points	= 8
-};
+struct screen_info screen_info = { .orig_video_lines = 30,
+				   .orig_video_cols = 80,
+				   .orig_video_mode = 0,
+				   .orig_video_ega_bx = 0,
+				   .orig_video_isVGA = 1,
+				   .orig_video_points = 8 };
 #endif
 
 /* The lucky hart to first increment this variable will boot the other cores */
@@ -66,10 +64,10 @@ void __init parse_dtb(unsigned int hartid, void *dtb)
 
 void __init setup_arch(char **cmdline_p)
 {
-	init_mm.start_code = (unsigned long) _stext;
-	init_mm.end_code   = (unsigned long) _etext;
-	init_mm.end_data   = (unsigned long) _edata;
-	init_mm.brk        = (unsigned long) _end;
+	init_mm.start_code = (unsigned long)_stext;
+	init_mm.end_code = (unsigned long)_etext;
+	init_mm.end_data = (unsigned long)_edata;
+	init_mm.brk = (unsigned long)_end;
 
 	*cmdline_p = boot_command_line;
 
@@ -87,8 +85,13 @@ void __init setup_arch(char **cmdline_p)
 	setup_smp();
 #endif
 
-#ifdef CONFIG_DUMMY_CONSOLE
+#ifdef CONFIG_VT
+#if defined(CONFIG_G_CONSOLE)
+	pr_info("Set conswitch = &gcon\n");
+	conswitchp = &gcon;
+#elif defined(CONFIG_DUMMY_CONSOLE)
 	conswitchp = &dummy_con;
+#endif
 #endif
 
 	riscv_fill_hwcap();

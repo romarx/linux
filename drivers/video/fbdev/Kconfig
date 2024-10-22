@@ -219,6 +219,15 @@ config FB_TILEBLITTING
 comment "Frame buffer hardware drivers"
 	depends on FB
 
+config FB_PAPER
+	tristate "Paper framebuffer support (alpha)"
+	depends on FB && HAS_DMA
+	select FB_CFB_FILLRECT
+	select FB_CFB_COPYAREA
+	select FB_CFB_IMAGEBLIT
+	---help---
+	Enables support for PAPER AXI HDMI Framebuffer
+
 config FB_GRVGA
 	tristate "Aeroflex Gaisler framebuffer support"
 	depends on FB && SPARC
